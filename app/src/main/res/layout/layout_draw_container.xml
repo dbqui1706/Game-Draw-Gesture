@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:id="@+id/drawContainer"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Khu vực vẽ -->
+    <FrameLayout
+        android:background="@android:color/white"
+        android:id="@+id/drawingArea"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_width="match_parent" />
+
+    <!-- Container cho các nút điều khiển -->
+    <LinearLayout
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:layoutDirection="rtl"
+        android:divider="@android:color/transparent"
+        android:showDividers="middle"
+        android:dividerPadding="10dp"
+        android:layout_marginHorizontal="20dp"
+        android:padding="8dp">
+        <ImageButton
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:id="@+id/btnClear"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:src="@drawable/trash" />
+        <ImageButton
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:id="@+id/btnUndo"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_marginHorizontal="10dp"
+            android:src="@drawable/undo_draw" />
+        <ImageButton
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:id="@+id/btnPen"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:src="@drawable/pencil_draw" />
+
+    </LinearLayout>
+</LinearLayout>

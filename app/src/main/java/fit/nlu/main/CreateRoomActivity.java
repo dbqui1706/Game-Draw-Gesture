@@ -1,19 +1,19 @@
 package fit.nlu.main;
 
-import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Spinner;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.*;
+import java.util.List;
 
 import fit.nlu.adapter.recycleview.player.PlayerAdapter;
 import fit.nlu.adapter.recycleview.player.PlayerItem;
@@ -22,6 +22,9 @@ import fit.nlu.adapter.spiner.model.BaseSpinnerItem;
 import fit.nlu.adapter.spiner.model.HintItem;
 import fit.nlu.adapter.spiner.model.PersonItem;
 import fit.nlu.adapter.spiner.model.TimeItem;
+import fit.nlu.fagment.FragmentChooseWord;
+import fit.nlu.fagment.FragmentDraw;
+import fit.nlu.fagment.FragmentInfoWaiting;
 
 public class CreateRoomActivity extends AppCompatActivity {
     private List<PlayerItem> players;
@@ -40,10 +43,6 @@ public class CreateRoomActivity extends AppCompatActivity {
         // Thiết lập LayoutManager (vertical list)
         rvPlayers.setLayoutManager(new LinearLayoutManager(this));
         rvPlayers.setAdapter(adapter);
-
-        List<PlayerItem> players = new ArrayList<>();
-        players.add(new PlayerItem("Quí", 0, null));
-        players.add(new PlayerItem("Quí", 0, null));
         adapter.updatePlayers(players);
 
         // Khởi tạo dữ liệu cho Spinner
@@ -52,13 +51,39 @@ public class CreateRoomActivity extends AppCompatActivity {
         // Thêm sự kiện cho nút rời phòng
         onLeaveRoom(findViewById(R.id.btnLeaveRoom));
 
+        // Xử lý khi nhấn nút "BẮT ĐẦU"
+        Button btnStart = findViewById(R.id.btn_start);
+        btnStart.setOnClickListener(v -> handleStartGame());
+
+    }
+
+    private void handleStartGame() {
+        // Kiểm tra vai trò người chơi
+        if (true) {
+            // Người chơi hiện tại là người chọn từ
+            replaceFragment(new FragmentChooseWord());
+//            replaceFragment(new FragmentInfoWaiting("Player A")); // Thay "Player A" bằng tên người chọn
+
+        } else {
+            // Người chơi khác phải đợi
+            replaceFragment(new FragmentInfoWaiting("Player A")); // Thay "Player A" bằng tên người chọn
+        }
+    }
+
+    public void replaceFragment(Fragment fragment) {
+        findViewById(R.id.roomOptions).setVisibility(View.GONE);
+        findViewById(R.id.fragmentContainer).setVisibility(View.VISIBLE);
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragmentContainer, fragment)
+                .commit();
     }
 
     private void dummyPlayerData() {
         players = new ArrayList<>();
         players.add(new PlayerItem("Qui", 0, null));
-        players.add(new PlayerItem("Nam", 0, null));
         players.add(new PlayerItem("Quan", 0, null));
+        players.add(new PlayerItem("Nam", 0, null));
     }
 
     private void initializeSpinners() {
@@ -95,29 +120,6 @@ public class CreateRoomActivity extends AppCompatActivity {
         spinner.setAdapter(adapter);
 
         // Thêm sự kiện chọn item
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                T item = items.get(i);
-                String spinner;
-                if (spinnerId == R.id.spinner_person) {
-                    spinner = "Người chơi";
-                } else if (spinnerId == R.id.spinner_timer) {
-                    spinner = "Thời gian";
-                } else if (spinnerId == R.id.spinner_hint) {
-                    spinner = "Số gợi ý";
-                } else {
-                    Toast.makeText(CreateRoomActivity.this, "Unknown spinner", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                Toast.makeText(CreateRoomActivity.this, spinner + ": " + item.getDisplayText(), Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
     }
 
     private void onLeaveRoom(ImageButton btnLeaveRoom) {
