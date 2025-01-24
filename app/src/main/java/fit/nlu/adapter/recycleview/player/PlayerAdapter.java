@@ -1,0 +1,74 @@
+package fit.nlu.adapter.recycleview.player;
+
+import android.content.Context;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.*;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.color.HarmonizedColorsOptions;
+
+import java.util.*;
+
+import fit.nlu.main.R;
+
+public class PlayerAdapter extends RecyclerView.Adapter<PlayerAdapter.PlayerViewHolder> {
+    private List<PlayerItem> players;           // Danh sách người chơi
+    private Context context;
+
+    // Constructor
+    public PlayerAdapter(Context context) {
+        this.context = context;
+        players = new ArrayList<>();
+    }
+
+    // ViewHolder class đại diện cho mỗi item trong RecyclerView
+    public static class PlayerViewHolder extends RecyclerView.ViewHolder {
+        ImageView ivPlayerAvatar;
+        TextView tvPlayerName;
+        TextView tvPlayerScore;
+
+        public PlayerViewHolder(@NonNull View itemView) {
+            super(itemView);
+            // Ánh xạ các view từ layout
+            ivPlayerAvatar = itemView.findViewById(R.id.ivPlayerAvatar);
+            tvPlayerName = itemView.findViewById(R.id.tvPlayerName);
+            tvPlayerScore = itemView.findViewById(R.id.tvPlayerScore);
+        }
+    }
+
+    @NonNull
+    @Override
+    public PlayerViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        // Tạo view mới từ layout item
+        View view = LayoutInflater.from(context)
+                .inflate(R.layout.item_player, parent, false);
+        return new PlayerViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull PlayerViewHolder holder, int position) {
+        // Lấy dữ liệu người chơi tại vị trí position
+        PlayerItem player = players.get(position);
+        // Cập nhật giao diện với thông tin người chơi
+        holder.tvPlayerName.setText(player.getName());
+        holder.tvPlayerScore.setText(player.getScore() + " điểm");
+//        holder.ivPlayerAvatar.setImageResource(R.drawable.avatar);
+    }
+
+    @Override
+    public int getItemCount() {
+        return players.size();
+    }
+
+    // Phương thức để cập nhật danh sách người chơi
+    public void updatePlayers(List<PlayerItem> newPlayers) {
+        this.players.clear();
+        this.players.addAll(newPlayers);
+        notifyDataSetChanged();
+    }
+}
