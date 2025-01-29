@@ -15,9 +15,10 @@ import com.google.android.material.color.HarmonizedColorsOptions;
 import java.util.*;
 
 import fit.nlu.main.R;
+import fit.nlu.model.Player;
 
 public class PlayerAdapter extends RecyclerView.Adapter<PlayerAdapter.PlayerViewHolder> {
-    private List<PlayerItem> players;           // Danh sách người chơi
+    private List<Player> players;           // Danh sách người chơi
     private Context context;
 
     // Constructor
@@ -53,9 +54,9 @@ public class PlayerAdapter extends RecyclerView.Adapter<PlayerAdapter.PlayerView
     @Override
     public void onBindViewHolder(@NonNull PlayerViewHolder holder, int position) {
         // Lấy dữ liệu người chơi tại vị trí position
-        PlayerItem player = players.get(position);
+        Player player = players.get(position);
         // Cập nhật giao diện với thông tin người chơi
-        holder.tvPlayerName.setText(player.getName());
+        holder.tvPlayerName.setText(player.getNickname());
         holder.tvPlayerScore.setText(player.getScore() + " điểm");
 //        holder.ivPlayerAvatar.setImageResource(R.drawable.avatar);
     }
@@ -66,7 +67,7 @@ public class PlayerAdapter extends RecyclerView.Adapter<PlayerAdapter.PlayerView
     }
 
     // Phương thức để cập nhật danh sách người chơi
-    public void updatePlayers(List<PlayerItem> newPlayers) {
+    public void updatePlayers(List<Player> newPlayers) {
         this.players.clear();
         this.players.addAll(newPlayers);
         notifyDataSetChanged();

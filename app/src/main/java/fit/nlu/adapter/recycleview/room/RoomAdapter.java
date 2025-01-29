@@ -12,18 +12,26 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+import fit.nlu.dto.RoomResponse;
 import fit.nlu.main.R;
+import fit.nlu.model.Room;
 
 // RoomAdapter kế thừa từ RecyclerView.Adapter để quản lý danh sách phòng
 public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder> {
     // Danh sách các phòng sẽ được hiển thị
-    private List<RoomItem> roomList;
+    private List<RoomResponse> roomList;
     // Context của ứng dụng, cần thiết cho việc tạo view
     private Context context;
 
     // Constructor nhận vào danh sách phòng
-    public RoomAdapter(List<RoomItem> roomList) {
+    public RoomAdapter(List<RoomResponse> roomList) {
         this.roomList = roomList;
+    }
+
+    // Update Rooms list
+    public void updateRooms(List<RoomResponse> roomList) {
+        this.roomList = roomList;
+        notifyDataSetChanged();
     }
 
     // Phương thức này được gọi khi RecyclerView cần tạo một ViewHolder mới
@@ -41,11 +49,11 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
     @Override
     public void onBindViewHolder(@NonNull RoomViewHolder holder, int position) {
         // Lấy thông tin phòng tại vị trí position
-        RoomItem room = roomList.get(position);
+        RoomResponse room = roomList.get(position);
         // Cập nhật giao diện với thông tin phòng
-        holder.roomName.setText("Phòng " + room.getRoomNumber());
+        holder.roomName.setText("Phòng " + room.getName());
         holder.playerCount.setText(
-                room.getPlayerCount() + "/" + room.getCapacity()
+                room.getCurrentPlayers() + "/" + room.getMaxPlayers()
         );
     }
 

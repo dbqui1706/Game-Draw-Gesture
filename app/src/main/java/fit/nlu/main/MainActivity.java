@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,6 +14,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
+
+import fit.nlu.model.Player;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,20 +35,24 @@ public class MainActivity extends AppCompatActivity {
         // Todo: Tìm nút theo phòng theo ID
         MaterialButton btnRooms = findViewById(R.id.btnRoom);
 
+        String nickname = ((EditText) findViewById(R.id.edtNickname)).getText().toString();
+        String avatar = ((ImageView) findViewById(R.id.avatar_player)).toString();
+
         // Thiết lập sự kiện click cho nút Phòng
-        btnRooms.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Tạo Intent để chuyển sang RoomsActivity
-                Intent intent = new Intent(MainActivity.this, RoomsActivity.class);
-                startActivity(intent);
-            }
+        btnRooms.setOnClickListener(v -> {
+            Player player = new Player(nickname, avatar, false);
+            // Tạo Intent để chuyển đối tượng Player sang RoomsActivity
+            Intent intent = new Intent(MainActivity.this, RoomsActivity.class);
+            intent.putExtra("player", player);
+            startActivity(intent);
         });
 
         // Todo: Navigate to CreateRoomActivity
         MaterialButton btnCreateRoom = findViewById(R.id.btnNewRoom);
         btnCreateRoom.setOnClickListener(v -> {
+            Player player = new Player(nickname, avatar, true);
             Intent intent = new Intent(MainActivity.this, CreateRoomActivity.class);
+            intent.putExtra("player", player);
             startActivity(intent);
         });
     }
