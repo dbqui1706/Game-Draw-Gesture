@@ -1,9 +1,13 @@
 package fit.nlu.model;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
-public class RoomSetting {
+import lombok.Data;
+
+@Data
+public class RoomSetting implements Serializable  {
     private int maxPlayer;
     private int totalRound;
     private int drawingTime;

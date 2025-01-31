@@ -1,13 +1,16 @@
 package fit.nlu.model;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import fit.nlu.enums.GameState;
+import lombok.Data;
 
-public class GameSession {
+@Data
+public class GameSession implements Serializable {
     private UUID id;
     private Room room;
     private List<Round> rounds;

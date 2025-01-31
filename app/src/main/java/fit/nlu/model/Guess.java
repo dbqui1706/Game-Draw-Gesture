@@ -1,9 +1,13 @@
 package fit.nlu.model;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.UUID;
 
-public class Guess {
+import lombok.Data;
+
+@Data
+public class Guess implements Serializable {
     private UUID id;
     private Player player;
     private Turn turn;

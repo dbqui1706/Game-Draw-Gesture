@@ -10,7 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import fit.nlu.main.CreateRoomActivity;
+import fit.nlu.main.RoomActivity;
 import fit.nlu.main.R;
 
 public class FragmentChooseWord extends Fragment {
@@ -26,7 +26,7 @@ public class FragmentChooseWord extends Fragment {
 
         View.OnClickListener wordClickListener = v -> {
             // Khi chọn từ xong, chuyển sang giao diện vẽ
-            ((CreateRoomActivity) requireActivity()).replaceFragment(new FragmentDraw());
+            ((RoomActivity) requireActivity()).replaceFragment(new FragmentDraw());
         };
 
         btnWord1.setOnClickListener(wordClickListener);

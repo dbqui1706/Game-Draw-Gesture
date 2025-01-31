@@ -14,7 +14,6 @@ import java.util.List;
 
 import fit.nlu.dto.RoomResponse;
 import fit.nlu.main.R;
-import fit.nlu.model.Room;
 
 // RoomAdapter kế thừa từ RecyclerView.Adapter để quản lý danh sách phòng
 public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder> {
@@ -22,6 +21,12 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
     private List<RoomResponse> roomList;
     // Context của ứng dụng, cần thiết cho việc tạo view
     private Context context;
+    // Interface để xử lý sự kiện click vào một phòng
+    public interface OnItemClickListener {
+        void onItemClick(RoomResponse rooms);
+    }
+    // Biến lưu trữ listener
+    private OnItemClickListener listener;
 
     // Constructor nhận vào danh sách phòng
     public RoomAdapter(List<RoomResponse> roomList) {
@@ -63,8 +68,13 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
         return roomList != null ? roomList.size() : 0;
     }
 
+    // Thiết lập listener cho sự kiện click vào một phòng
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
+    }
+
     // RoomViewHolder đại diện cho giao diện của một phòng
-    static class RoomViewHolder extends RecyclerView.ViewHolder {
+    class RoomViewHolder extends RecyclerView.ViewHolder {
         // Các thành phần giao diện của một phòng
         ImageView roomIcon;      // Biểu tượng phòng
         TextView roomName;       // Tên phòng
@@ -78,6 +88,14 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
             roomIcon = itemView.findViewById(R.id.roomIcon);
             roomName = itemView.findViewById(R.id.roomName);
             playerCount = itemView.findViewById(R.id.playerCount);
+
+            // Gán sự kiện click cho itemView
+            itemView.setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                if (position != RecyclerView.NO_POSITION && listener != null) {
+                    listener.onItemClick(roomList.get(position));
+                }
+            });
         }
     }
 }

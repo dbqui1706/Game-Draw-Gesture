@@ -1,5 +1,6 @@
 package fit.nlu.main;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageButton;
@@ -15,6 +16,7 @@ import java.util.List;
 import fit.nlu.adapter.recycleview.room.RoomAdapter;
 import fit.nlu.dto.RoomResponse;
 import fit.nlu.model.Player;
+import fit.nlu.model.Room;
 import fit.nlu.service.ApiClient;
 import fit.nlu.service.GameApiService;
 import retrofit2.Call;
@@ -27,28 +29,46 @@ public class RoomsActivity extends AppCompatActivity {
     private GameApiService gameApiService;
     private List<RoomResponse> rooms;
     private RoomAdapter adapter; // Thêm adapter là biến instance
+    private RecyclerView roomsRV;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rooms);
 
-        player = (Player) getIntent().getSerializableExtra("player");
+        player = getIntent().getSerializableExtra("player", Player.class);
         gameApiService = ApiClient.getClient().create(GameApiService.class);
 
         setupRecyclerView();
         setupBackButton();
         loadRooms();
+        // Thêm sự kiên click cho các item recyclerview
+        adapter.setOnItemClickListener(room -> {
+            // Call API join room
+            gameApiService.joinRoom(room.getRoomId(), player).enqueue(new Callback<Room>() {
+                @Override
+                public void onResponse(Call<Room> call, Response<Room> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        Log.d("API_SUCCESS", "Join room: " + response.body());
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Room> call, Throwable t) {
+                }
+            });
+
+        });
+        roomsRV.setAdapter(adapter);
     }
 
     private void setupRecyclerView() {
-        RecyclerView recyclerView = findViewById(R.id.roomsRecyclerView);
+        roomsRV = findViewById(R.id.roomsRecyclerView);
         GridLayoutManager layoutManager = new GridLayoutManager(this, 3);
-        recyclerView.setLayoutManager(layoutManager);
+        roomsRV.setLayoutManager(layoutManager);
 
         // Khởi tạo adapter với danh sách rỗng
         adapter = new RoomAdapter(new ArrayList<>());
-        recyclerView.setAdapter(adapter);
     }
 
     private void setupBackButton() {

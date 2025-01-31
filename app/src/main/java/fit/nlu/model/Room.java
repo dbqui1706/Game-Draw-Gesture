@@ -1,12 +1,17 @@
 package fit.nlu.model;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Map;
 import java.util.UUID;
 
 import fit.nlu.enums.RoomState;
+import lombok.Data;
+import lombok.Getter;
 
-public class Room {
+@Data
+@Getter
+public class Room implements Serializable {
     private UUID id;
     private Player owner;
     private Map<UUID, Player> players;
@@ -78,5 +83,19 @@ public class Room {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public String toString() {
+        return "Room{" +
+                "id=" + id +
+                ", owner=" + owner +
+                ", players=" + players +
+                ", chatSystem=" + chatSystem +
+                ", gameSession=" + gameSession +
+                ", setting=" + setting +
+                ", state=" + state +
+                ", createdAt=" + createdAt +
+                '}';
     }
 }

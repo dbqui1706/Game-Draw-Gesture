@@ -4,7 +4,9 @@ import java.io.Serializable;
 import java.util.UUID;
 
 import fit.nlu.enums.PlayerStatus;
+import lombok.Data;
 
+@Data
 public class Player implements Serializable {
     private UUID id;
     private String roomId;
@@ -28,63 +30,31 @@ public class Player implements Serializable {
         return id;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
     public String getRoomId() {
         return roomId;
-    }
-
-    public void setRoomId(String roomId) {
-        this.roomId = roomId;
     }
 
     public String getNickname() {
         return nickname;
     }
 
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
     public boolean isOwner() {
         return isOwner;
-    }
-
-    public void setOwner(boolean owner) {
-        isOwner = owner;
     }
 
     public String getAvatar() {
         return avatar;
     }
 
-    public void setAvatar(String avatar) {
-        this.avatar = avatar;
-    }
-
     public int getScore() {
         return score;
-    }
-
-    public void setScore(int score) {
-        this.score = score;
     }
 
     public boolean isDrawing() {
         return isDrawing;
     }
 
-    public void setDrawing(boolean drawing) {
-        isDrawing = drawing;
-    }
-
     public PlayerStatus getStatus() {
         return status;
-    }
-
-    public void setStatus(PlayerStatus status) {
-        this.status = status;
     }
 }

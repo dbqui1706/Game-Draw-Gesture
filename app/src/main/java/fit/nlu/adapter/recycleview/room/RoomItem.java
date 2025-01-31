@@ -1,6 +1,7 @@
 package fit.nlu.adapter.recycleview.room;
 
 public class RoomItem {
+    private String id;
     private int roomNumber;
     private int playerCount;
     private int capacity;
@@ -11,6 +12,9 @@ public class RoomItem {
         this.capacity = capacity;
     }
 
+    public String getId() {
+        return id;
+    }
     public int getRoomNumber() {
         return roomNumber;
     }

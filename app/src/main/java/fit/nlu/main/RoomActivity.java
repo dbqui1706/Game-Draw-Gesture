@@ -18,26 +18,21 @@ import java.util.Arrays;
 import java.util.List;
 
 import fit.nlu.adapter.recycleview.player.PlayerAdapter;
-import fit.nlu.adapter.recycleview.player.PlayerItem;
 import fit.nlu.adapter.spiner.CustomSpinnerAdapter;
 import fit.nlu.adapter.spiner.model.BaseSpinnerItem;
 import fit.nlu.adapter.spiner.model.HintItem;
 import fit.nlu.adapter.spiner.model.PersonItem;
+import fit.nlu.adapter.spiner.model.RoundItem;
 import fit.nlu.adapter.spiner.model.TimeItem;
-import fit.nlu.fagment.FragmentChooseWord;
-import fit.nlu.fagment.FragmentInfoWaiting;
+import fit.nlu.enums.RoomState;
 import fit.nlu.model.Player;
 import fit.nlu.model.Room;
-import fit.nlu.service.ApiClient;
 import fit.nlu.service.GameApiService;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
+import fit.nlu.service.GameWebSocketService;
 
-public class CreateRoomActivity extends AppCompatActivity {
+public class RoomActivity extends AppCompatActivity implements GameWebSocketService.WebSocketEventListener {
     private GameApiService gameApiService;
-    private Player owner = getIntent().getSerializableExtra("player", Player.class);
+    private Player player;
     private List<Player> players;
 
     @Override
@@ -46,11 +41,11 @@ public class CreateRoomActivity extends AppCompatActivity {
         setContentView(R.layout.activity_create_room);
 
         // Khởi tạo ApiClient
-//        gameApiService = ApiClient.getClient().create(GameApiService.class);
+        Room room = getIntent().getSerializableExtra("room", Room.class);
 
         // Khởi dữ liệu cho Player và RecyclerView
-        players = new ArrayList<>();
-        players.add(owner);
+        players = new ArrayList<>(room.getPlayers().values());
+
         // Trong onCreate hoặc onViewCreated
         RecyclerView rvPlayers = findViewById(R.id.rvPlayers);
         PlayerAdapter adapter = new PlayerAdapter(this);
@@ -65,32 +60,6 @@ public class CreateRoomActivity extends AppCompatActivity {
 
         // Thêm sự kiện cho nút rời phòng
         onLeaveRoom(findViewById(R.id.btnLeaveRoom));
-
-        // Xử lý khi nhấn nút "BẮT ĐẦU"
-        Button btnStart = findViewById(R.id.btn_start);
-        btnStart.setOnClickListener(v -> handleStartGame());
-
-    }
-
-    private void handleStartGame() {
-        // Gọi API tạo phòng
-        gameApiService.createRoom(owner).enqueue(new Callback<Room>() {
-            @Override
-            public void onResponse(Call<Room> call, Response<Room> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    Log.d("CreateRoomActivity", "Room created: " + response.body());
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Room> call, Throwable t) {
-                // Handle error
-                AlertDialog.Builder builder = new AlertDialog.Builder(CreateRoomActivity.this);
-                builder.setMessage("Không thể tạo phòng, vui lòng thử lại sau")
-                        .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
-                        .show();
-            }
-        });
     }
 
     public void replaceFragment(Fragment fragment) {
@@ -115,6 +84,12 @@ public class CreateRoomActivity extends AppCompatActivity {
                 new TimeItem(120)
         );
 
+        List<RoundItem> rounds = Arrays.asList(
+                new RoundItem(3),
+                new RoundItem(5),
+                new RoundItem(7)
+        );
+
         List<HintItem> hints = Arrays.asList(
                 new HintItem(1),
                 new HintItem(2),
@@ -134,11 +109,34 @@ public class CreateRoomActivity extends AppCompatActivity {
         );
         Spinner spinner = findViewById(spinnerId);
         spinner.setAdapter(adapter);
-
-        // Thêm sự kiện chọn item
     }
 
     private void onLeaveRoom(ImageButton btnLeaveRoom) {
         btnLeaveRoom.setOnClickListener(v -> onBackPressed());
+    }
+
+    @Override
+    public void onStateChanged(RoomState state) {
+
+    }
+
+    @Override
+    public void onPlayerJoined(Player player) {
+
+    }
+
+    @Override
+    public void onPlayerLeft(Player player) {
+
+    }
+
+    @Override
+    public void onGameUpdate(Room roomData) {
+
+    }
+
+    @Override
+    public void onError(String error) {
+
     }
 }
