@@ -1,8 +1,10 @@
 package fit.nlu.dto;
 
+import java.io.Serializable;
+
 import fit.nlu.enums.RoomState;
 
-public class RoomResponse {
+public class RoomResponse implements Serializable {
     private String roomId;
     private String name;
     private int maxPlayers;

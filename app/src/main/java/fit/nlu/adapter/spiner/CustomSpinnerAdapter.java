@@ -1,5 +1,6 @@
 package fit.nlu.adapter.spiner;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +23,7 @@ public class CustomSpinnerAdapter<T extends BaseSpinnerItem> extends ArrayAdapte
         super(context, selectedLayout, objects);
     }
 
+    @SuppressLint("ViewHolder")
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         convertView = LayoutInflater.from(

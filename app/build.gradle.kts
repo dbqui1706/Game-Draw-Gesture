@@ -46,8 +46,8 @@ dependencies {
     implementation ("com.squareup.okhttp3:okhttp:4.9.1")
     implementation ("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.14")
 
-//    // STOMP WebSocket client
-//    implementation ("com.github.NaikSoftware:StompProtocolAndroid:1.6.6")
+    // STOMP WebSocket client
+    implementation ("com.github.NaikSoftware:StompProtocolAndroid:1.6.6")
 
     // RxJava (cần cho STOMP client)
     implementation ("io.reactivex.rxjava2:rxjava:2.2.21")

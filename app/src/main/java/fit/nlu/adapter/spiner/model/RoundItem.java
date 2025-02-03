@@ -1,10 +1,10 @@
 package fit.nlu.adapter.spiner.model;
 
-public class RoundItem {
+public class RoundItem extends BaseSpinnerItem {
     private int number;
 
     public RoundItem(int number) {
-        this.number = number;
+        super(number + " round");
     }
 
     public int getNumber() {

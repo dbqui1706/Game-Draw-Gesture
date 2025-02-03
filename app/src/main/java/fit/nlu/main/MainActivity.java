@@ -1,6 +1,5 @@
 package fit.nlu.main;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -8,11 +7,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AlertDialog;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
 
@@ -20,80 +16,155 @@ import fit.nlu.model.Player;
 import fit.nlu.model.Room;
 import fit.nlu.service.ApiClient;
 import fit.nlu.service.GameApiService;
+import fit.nlu.service.GameWebSocketService;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements GameWebSocketService.WebSocketEventListener {
+    // Constants để dễ maintain và tránh hardcode
+    private static final String TAG = "MainActivity";
+    private static final String KEY_PLAYER = "player";
+    private static final String KEY_ROOM = "room";
+
+    // Services và model objects
     private GameApiService gameApiService;
+    private GameWebSocketService webSocketService;
+    private Player player;
 
+    // UI components
+    private EditText edtNickname;
+    private ImageView avatarImageView;
+    private MaterialButton btnRooms;
+    private MaterialButton btnCreateRoom;
 
-    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) ->
-        {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
 
+        // Khởi tạo services
+        initializeServices();
+
+        // Setup UI components
+        initializeViews();
+
+        // Setup click listeners
+        setupClickListeners();
+    }
+
+    /**
+     * Khởi tạo các services cần thiết
+     */
+    private void initializeServices() {
+        webSocketService = new GameWebSocketService(this);
         gameApiService = ApiClient.getClient().create(GameApiService.class);
+    }
 
-        // Todo: Tìm nút theo phòng theo ID
-        MaterialButton btnRooms = findViewById(R.id.btnRoom);
+    /**
+     * Tìm và gán các view từ layout
+     */
+    private void initializeViews() {
+        edtNickname = findViewById(R.id.edtNickname);
+        avatarImageView = findViewById(R.id.avatar_player);
+        btnRooms = findViewById(R.id.btnRoom);
+        btnCreateRoom = findViewById(R.id.btnNewRoom);
+    }
 
-        String nickname = ((EditText) findViewById(R.id.edtNickname)).getText().toString();
-        String avatar = ((ImageView) findViewById(R.id.avatar_player)).toString();
+    /**
+     * Setup click listeners cho các buttons
+     */
+    private void setupClickListeners() {
+        btnRooms.setOnClickListener(v -> navigateToRooms());
+        btnCreateRoom.setOnClickListener(v -> handleCreateRoom());
+    }
 
-        // Thiết lập sự kiện click cho nút list Phòng
-        btnRooms.setOnClickListener(v -> {
-            Player player = new Player(nickname, avatar, false);
-            // Tạo Intent để chuyển đối tượng Player sang RoomsActivity
-            Intent intent = new Intent(MainActivity.this, RoomsActivity.class);
-            intent.putExtra("player", player);
-            startActivity(intent);
-        });
+    /**
+     * Lấy thông tin player từ input fields
+     */
+    private Player createPlayerFromInput(boolean isOwner) {
+        String nickname = edtNickname.getText().toString();
+        String avatar = avatarImageView.toString();
+        return new Player(nickname, avatar, isOwner);
+    }
 
-        // Todo: Navigate to CreateRoomActivity
-        MaterialButton btnCreateRoom = findViewById(R.id.btnNewRoom);
-        btnCreateRoom.setOnClickListener(v -> {
-            Player player = new Player(nickname, avatar, true);
+    /**
+     * Chuyển sang màn hình danh sách phòng
+     */
+    private void navigateToRooms() {
+        player = createPlayerFromInput(false);
+        Intent intent = new Intent(this, RoomsActivity.class);
+        intent.putExtra(KEY_PLAYER, player);
+        startActivity(intent);
+    }
 
-            // Call API đến Server để tạo phòng
-            Room room = createRoom(player);
+    /**
+     * Xử lý tạo phòng mới
+     */
+    private void handleCreateRoom() {
+        player = createPlayerFromInput(true);
+        createRoomOnServer(player);
+    }
+
+    /**
+     * Gọi API tạo phòng mới
+     */
+    private void createRoomOnServer(Player player) {
+        Call<Room> call = gameApiService.createRoom(player);
+        call.enqueue(new Callback<Room>() {
+            @Override
+            public void onResponse(@NonNull Call<Room> call, @NonNull Response<Room> response) {
+                handleCreateRoomResponse(response);
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Room> call, @NonNull Throwable t) {
+                Log.e(TAG, "Failed to create room", t);
+                // TODO: Hiển thị thông báo lỗi cho người dùng
+            }
         });
     }
 
+    /**
+     * Xử lý response khi tạo phòng thành công
+     */
+    private void handleCreateRoomResponse(Response<Room> response) {
+        if (response.isSuccessful() && response.body() != null) {
+            Room room = response.body();
+            navigateToRoom(room);
+        }
+    }
 
-    private Room createRoom(Player player) {
-        final Room[] room = new Room[1];
-        gameApiService.createRoom(player).enqueue(new Callback<Room>() {
-            @Override
-            public void onResponse(Call<Room> call, Response<Room> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    room[0] = response.body();
-                    Log.d("API_SUCCESS", "Room created: " + room[0]);
-                    // Todo: Navigate to CreateRoomActivity
-                    Intent intent = new Intent(MainActivity.this, RoomActivity.class);
-                    intent.putExtra("room", room[0]);
-                    startActivity(intent);
-                }
-            }
+    /**
+     * Chuyển sang màn hình phòng
+     */
+    private void navigateToRoom(Room room) {
+        Intent intent = new Intent(this, RoomActivity.class);
+        intent.putExtra(KEY_ROOM, room);
+        intent.putExtra(KEY_PLAYER, player);
+        startActivity(intent);
+    }
 
-            @Override
-            public void onFailure(Call<Room> call, Throwable t) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("Error");
-                builder.setMessage("Failed to create room: " + t.getMessage());
-                builder.setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
-                builder.show();
-                Log.e("API_ERROR", "Failed to create room: " + t.getMessage());
-            }
-        });
-        return room[0];
+    // WebSocket event handlers
+    @Override
+    public void onConnected() {
+        webSocketService.subscribe("/topic/rooms");
+    }
+
+    @Override
+    public void onDisconnected() {
+        // TODO: Implement reconnection logic
+
+    }
+
+    @Override
+    public void onError(String error) {
+        // TODO: Show error to user
+    }
+
+    @Override
+    public void onMessageReceived(String topic, String message) {
+        // TODO: Handle received messages based on topic
     }
 }

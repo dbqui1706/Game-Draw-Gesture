@@ -20,4 +20,7 @@ public interface GameApiService {
 
     @GET("api/game/rooms")
     Call<List<RoomResponse>> getRooms();
+
+    @POST("api/game/leave-room")
+    Call<Void> leaveRoom(@Query("roomId") String roomId, @Body Player player);
 }
