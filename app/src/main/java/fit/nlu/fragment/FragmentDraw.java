@@ -1,4 +1,4 @@
-package fit.nlu.fagment;
+package fit.nlu.fragment;
 
 import android.app.AlertDialog;
 import android.os.Bundle;

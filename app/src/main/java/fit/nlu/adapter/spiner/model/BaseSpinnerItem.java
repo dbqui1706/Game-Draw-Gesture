@@ -10,4 +10,5 @@ public abstract class BaseSpinnerItem {
     public String getDisplayText() {
         return displayText;
     }
+    public abstract boolean isMatchingValue(int value);
 }

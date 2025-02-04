@@ -1,4 +1,4 @@
-package fit.nlu.fagment;
+package fit.nlu.fragment;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

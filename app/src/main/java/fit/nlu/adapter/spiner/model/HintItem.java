@@ -11,4 +11,9 @@ public class HintItem extends BaseSpinnerItem {
     public int getCount() {
         return count;
     }
+
+    @Override
+    public boolean isMatchingValue(int value) {
+        return count == value;
+    }
 }

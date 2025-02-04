@@ -26,6 +26,7 @@
                 android:src="@drawable/time" />
 
             <TextView
+                android:id="@+id/tvTime"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:text="120"
@@ -105,13 +106,15 @@
 
                 <!-- Chat messages list -->
                 <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvChat"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"
-                    android:padding="8dp" />
+                    android:padding="5dp" />
 
                 <!-- Chat input -->
                 <EditText
+                    android:id="@+id/etChatInput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"

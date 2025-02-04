@@ -2,13 +2,12 @@ package fit.nlu.state;
 
 import androidx.fragment.app.Fragment;
 
-import fit.nlu.fragment.FragmentChooseWord;
+import fit.nlu.fragment.FragmentFinished;
 import fit.nlu.main.RoomActivity;
 import fit.nlu.service.GameWebSocketService;
 
-public class ChoosingStateHandler extends RoomStateHandler {
-
-    public ChoosingStateHandler(RoomActivity roomActivity, GameWebSocketService webSocket) {
+public class FinishedStateHandler extends RoomStateHandler {
+    public FinishedStateHandler(RoomActivity roomActivity, GameWebSocketService webSocket) {
         super(roomActivity, webSocket);
     }
 
@@ -24,7 +23,7 @@ public class ChoosingStateHandler extends RoomStateHandler {
 
     @Override
     public Fragment getStateFragment() {
-        return new FragmentChooseWord();
+        return new FragmentFinished();
     }
 
     @Override

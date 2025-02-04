@@ -10,4 +10,9 @@ public class RoundItem extends BaseSpinnerItem {
     public int getNumber() {
         return number;
     }
+
+    @Override
+    public boolean isMatchingValue(int value) {
+        return number == value;
+    }
 }

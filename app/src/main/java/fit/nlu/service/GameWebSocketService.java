@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +23,7 @@ import ua.naiksoftware.stomp.dto.LifecycleEvent;
  * Service quản lý kết nối WebSocket cho game, xử lý việc kết nối, gửi/nhận message
  * và quản lý các subscriptions tới các topics khác nhau.
  */
-public class GameWebSocketService {
+public class GameWebSocketService implements Serializable {
     private static final String TAG = "WebSocketManager";
     private static final String WS_URL = "ws://192.168.31.211:8081/ws/websocket";
 

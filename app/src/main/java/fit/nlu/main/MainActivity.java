@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements GameWebSocketServ
     // WebSocket event handlers
     @Override
     public void onConnected() {
-        webSocketService.subscribe("/topic/rooms");
+//        webSocketService.subscribe("/topic/rooms");
     }
 
     @Override

@@ -11,4 +11,9 @@ public class TimeItem extends BaseSpinnerItem {
     public int getSeconds() {
         return seconds;
     }
+
+    @Override
+    public boolean isMatchingValue(int value) {
+        return seconds == value;
+    }
 }

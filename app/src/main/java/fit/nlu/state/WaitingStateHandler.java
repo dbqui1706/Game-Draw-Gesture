@@ -2,13 +2,14 @@ package fit.nlu.state;
 
 import androidx.fragment.app.Fragment;
 
-import fit.nlu.enums.RoomState;
-import fit.nlu.fagment.FragmentWaitingRoom;
+import fit.nlu.fragment.FragmentWaitingRoom;
 import fit.nlu.main.RoomActivity;
+import fit.nlu.model.RoomSetting;
 import fit.nlu.service.GameWebSocketService;
-import fit.nlu.service.WebSocketMessage;
 
 public class WaitingStateHandler extends RoomStateHandler {
+    private FragmentWaitingRoom fragment;
+
     public WaitingStateHandler(RoomActivity roomActivity, GameWebSocketService webSocket) {
         super(roomActivity, webSocket);
     }
@@ -25,18 +26,26 @@ public class WaitingStateHandler extends RoomStateHandler {
 
     @Override
     public Fragment getStateFragment() {
-        return FragmentWaitingRoom.newInstance(roomActivity.getCurrentRoom(), roomActivity.getCurrentPlayer());
+        if (fragment == null) {
+            fragment = FragmentWaitingRoom.newInstance(
+                    webSocket,
+                    roomActivity.getCurrentRoom(),
+                    roomActivity.getCurrentPlayer()
+            );
+        }
+        return fragment;
     }
 
     @Override
     public void handlePlayerAction(String action, Object... params) {
         switch (action) {
-            case "START_GAME":
-                webSocket.sendMessage(WebSocketMessage.STATE_CHANGED, String.valueOf(RoomState.CHOOSING));
+            case "UPDATE_OPTIONS":
+                fragment.updateSetting((RoomSetting) params[0]);
+                break;
+            default:
                 break;
         }
     }
-
 
 
 }
