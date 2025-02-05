@@ -1,18 +1,19 @@
 package fit.nlu.adapter.spiner.model;
 
 public class RoundItem extends BaseSpinnerItem {
-    private int number;
+    private int round;
 
-    public RoundItem(int number) {
-        super(number + " round");
+    public RoundItem(int round) {
+        super(round + " round");
+        this.round = round;
     }
 
-    public int getNumber() {
-        return number;
+    public int getRound() {
+        return round;
     }
 
     @Override
     public boolean isMatchingValue(int value) {
-        return number == value;
+        return round == value;
     }
 }

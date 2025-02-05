@@ -1,10 +1,12 @@
 package fit.nlu.main;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -19,6 +21,7 @@ import java.util.List;
 
 import fit.nlu.adapter.recycleview.message.MessageAdapter;
 import fit.nlu.adapter.recycleview.player.PlayerAdapter;
+import fit.nlu.dto.response.TurnDto;
 import fit.nlu.enums.MessageType;
 import fit.nlu.model.Message;
 import fit.nlu.model.Player;
@@ -28,6 +31,7 @@ import fit.nlu.service.ApiClient;
 import fit.nlu.service.GameApiService;
 import fit.nlu.service.GameWebSocketService;
 import fit.nlu.state.RoomStateManager;
+import fit.nlu.utils.CountdownManager;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -61,6 +65,9 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
     private List<Player> players; // Danh sách người chơi trong phòng
     private List<Message> messages; // Danh sách tin nhắn trong phòng
     private RoomStateManager stateManager; // Quản lý trạng thái phòng
+
+    // Utils
+    private CountdownManager countdownManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,6 +146,9 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
         btnLeaveRoom.setOnClickListener(v -> onLeaveRoom());
     }
 
+    /**
+     * Xử lý sự kiện rời phòng
+     */
     private void onLeaveRoom() {
         // Gửi request rời phòng
         Call<Void> call = gameApiService.leaveRoom(
@@ -147,7 +157,7 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
         );
         call.enqueue(new Callback<Void>() {
             @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
                 if (response.isSuccessful()) {
                     // Rời phòng thành công
                     finish();
@@ -155,7 +165,7 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
             }
 
             @Override
-            public void onFailure(Call<Void> call, Throwable t) {
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
 
             }
         });
@@ -199,6 +209,12 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
 
         // lắng nghe thay đổi setting từ server
         webSocketService.subscribe("/topic/room/" + currentRoom.getId() + "/options");
+
+        // Lắng nghe sự kiện bắt đầu game từ server
+        webSocketService.subscribe("/topic/room/" + currentRoom.getId() + "/start");
+
+        // Lắng nghe sự kiện turn start từ server
+        webSocketService.subscribe("/topic/room/" + currentRoom.getId() + "/turn");
     }
 
     @Override
@@ -231,6 +247,54 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
             onChatMessage(message);
         } else if (topic.equals("/topic/room/" + currentRoom.getId() + "/options")) {
             onUpdateSetting(message);
+        } else if (topic.equals("/topic/room/" + currentRoom.getId() + "/turn")) {
+            onChangeUI(message);
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void onChangeUI(String message) {
+        TextView tvWaiting = findViewById(R.id.tv_waiting);
+        tvWaiting.setVisibility(TextView.GONE);
+
+        try {
+            TurnDto turn = new Gson().fromJson(message, TurnDto.class);
+            if (turn == null) return;
+            TextView tvStart = findViewById(R.id.tv_word);
+            tvStart.setVisibility(TextView.VISIBLE);
+            if (currentPlayer.isOwner()) {
+                tvStart.setText("Vẽ từ: " + turn.getKeyword());
+            } else {
+                // Tạo enDash có kích thước bằng với từ
+                String enDash = maskWord(turn.getKeyword());
+                tvStart.setText("Đoán từ: " + enDash);
+            }
+            String type = turn.getEventType();
+            int timeLimit = turn.getTimeLimit();
+            switch (type) {
+                case "TURN_START":
+                    // Đếm ngược thời gian vẽ
+                    countdownManager = new CountdownManager(tvTimer);
+                    countdownManager.startCountdown(timeLimit);
+                    break;
+
+                case "TURN_END":
+                    // Dừng đếm ngược
+                    if (countdownManager != null) {
+                        countdownManager.stopCountdown();
+                    }
+                    break;
+                case "GAME_END":
+                    // Dừng đếm ngược
+                    if (countdownManager != null) {
+                        countdownManager.cleanup();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        } catch (JsonSyntaxException e) {
+            Log.e(TAG, "Error parsing chat message", e);
         }
     }
 
@@ -270,22 +334,6 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
     }
 
     /**
-     * Xử lý sự kiện người chơi rời phòng
-     */
-    private void onPlayerLeave(String message) {
-        try {
-            Player player = new Gson().fromJson(message, Player.class);
-            if (player != null) {
-                players.remove(player);
-                runOnUiThread(() -> adapter.updatePlayers(players));
-                Log.d(TAG, "Player left: " + player.getNickname());
-            }
-        } catch (JsonSyntaxException e) {
-            Log.e(TAG, "Error parsing player leave message", e);
-        }
-    }
-
-    /**
      * Cập nhật thông tin phòng khi nhận được update từ server
      */
     private void onRoomUpdate(String message) {
@@ -311,6 +359,9 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
             Log.d(TAG, "Updated players list: " + updatedPlayers.size());
             // TODO: Cập nhật các thành phần UI khác nếu cần
         });
+        if (currentRoom.getState() != null) {
+            stateManager.changeState(currentRoom.getState());
+        }
     }
 
     // Getters for current state
@@ -328,7 +379,26 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
         if (webSocketService != null) {
             webSocketService.unsubscribe("/topic/room/" + currentRoom.getId() + "/update");
             webSocketService.unsubscribe("/topic/room/" + currentRoom.getId() + "/message");
+            webSocketService.unsubscribe("/topic/room/" + currentRoom.getId() + "/options");
             webSocketService.disconnect();
         }
+    }
+
+    public String maskWord(String word) {
+        if (word == null || word.isEmpty()) {
+            return "";
+        }
+
+        StringBuilder masked = new StringBuilder();
+        for (int i = 0; i < word.length(); i++) {
+            if (word.charAt(i) == ' ') {
+                masked.append("   "); // 3 khoảng trắng để giữ format
+            } else {
+                masked.append("_ ");
+            }
+        }
+
+        // Xóa khoảng trắng cuối cùng nếu có
+        return masked.toString().trim();
     }
 }

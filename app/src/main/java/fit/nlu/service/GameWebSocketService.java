@@ -2,8 +2,6 @@ package fit.nlu.service;
 
 import android.util.Log;
 
-import com.google.gson.Gson;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +23,7 @@ import ua.naiksoftware.stomp.dto.LifecycleEvent;
  */
 public class GameWebSocketService implements Serializable {
     private static final String TAG = "WebSocketManager";
-    private static final String WS_URL = "ws://192.168.31.211:8081/ws/websocket";
+    private static final String WS_URL = "ws://192.168.31.210:8081/ws/websocket";
 
     // Lưu trữ các disposables để quản lý subscriptions
     private final CompositeDisposable compositeDisposable;

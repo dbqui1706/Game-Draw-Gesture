@@ -9,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
 public class ApiClient {
-    private static final String BASE_URL = "http://192.168.31.211:8081/";
+    private static final String BASE_URL = "http://192.168.31.210:8081/";
     private static Retrofit retrofit = null;
 
     public static Retrofit getClient() {

@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
@@ -36,6 +37,7 @@ public class FragmentWaitingRoom extends Fragment {
     private GameWebSocketService webSocketService;
     private Room currentRoom;
     private Player currentPlayer;
+    private Button btnStart;
     private Spinner spinnerPerson, spinnerTimer, spinnerRound, spinnerHint;
     private final Map<Class<? extends BaseSpinnerItem>, Consumer<BaseSpinnerItem>> optionUpdaters = new HashMap<>();
 
@@ -75,7 +77,7 @@ public class FragmentWaitingRoom extends Fragment {
     private void initializeOptionUpdaters() {
         optionUpdaters.put(PersonItem.class, item -> currentRoom.getSetting().setMaxPlayer(((PersonItem) item).getNumber()));
         optionUpdaters.put(TimeItem.class, item -> currentRoom.getSetting().setDrawingTime(((TimeItem) item).getSeconds()));
-        optionUpdaters.put(RoundItem.class, item -> currentRoom.getSetting().setTotalRound(((RoundItem) item).getNumber()));
+        optionUpdaters.put(RoundItem.class, item -> currentRoom.getSetting().setTotalRound(((RoundItem) item).getRound()));
         optionUpdaters.put(HintItem.class, item -> currentRoom.getSetting().setHintCount(((HintItem) item).getCount()));
     }
 
@@ -144,10 +146,30 @@ public class FragmentWaitingRoom extends Fragment {
     }
 
     private void setupStartButton(View view) {
+        btnStart = view.findViewById(R.id.btn_start); // Khởi tạo button trước
+
         if (!currentPlayer.isOwner()) {
-            List<Integer> spinnerIds = Arrays.asList(R.id.spinner_person, R.id.spinner_timer, R.id.spinner_round, R.id.spinner_hint);
-            for (int id : spinnerIds) view.findViewById(id).setEnabled(false);
-            view.findViewById(R.id.btn_start).setEnabled(false);
+            Log.d("FragmentWaitingRoom", "Disabling controls for non-owner");
+            List<Integer> spinnerIds = Arrays.asList(R.id.spinner_person, R.id.spinner_timer,
+                    R.id.spinner_round, R.id.spinner_hint);
+            for (int id : spinnerIds) {
+                view.findViewById(id).setEnabled(false);
+            }
+            btnStart.setEnabled(false);
+            int color = getResources().getColor(R.color.gray_background, null);
+            btnStart.setBackgroundColor(color);
+            return;
         }
+
+        Log.d("FragmentWaitingRoom", "Setting up controls for owner");
+        Log.d("FragmentWaitingRoom", currentPlayer.getNickname() + " | is owner: " + currentPlayer.isOwner());
+        // Set click listener cho button
+        btnStart.setOnClickListener(v -> {
+            Log.d("FragmentWaitingRoom", "Start button clicked");
+            String destination = "/app/room/" + currentRoom.getId() + "/start";
+            webSocketService.sendMessage(destination, "");
+        });
     }
+
+
 }

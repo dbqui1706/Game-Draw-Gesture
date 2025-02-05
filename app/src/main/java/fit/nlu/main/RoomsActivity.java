@@ -140,25 +140,23 @@ public class RoomsActivity extends AppCompatActivity implements GameWebSocketSer
     @Override
     public void onDisconnected() {
         runOnUiThread(() -> {
-            Toast.makeText(RoomsActivity.this,
-                    "Disconnected from server",
-                    Toast.LENGTH_SHORT).show();
 
+            Log.d(TAG, "Disconnected from server");
             // Thử kết nối lại sau 1 giây
-            new Handler().postDelayed(() -> {
-                if (!webSocketService.isConnected()) {
-                    webSocketService.connect();
-                }
-            }, 500);
+//            new Handler().postDelayed(() -> {
+//                if (!webSocketService.isConnected()) {
+//                    webSocketService.connect();
+//                }
+//            }, 500);
         });
     }
 
     @Override
     public void onError(String error) {
         // Khi có lỗi xảy ra, hiển thị thông báo cho người dùng
-        runOnUiThread(() -> Toast.makeText(RoomsActivity.this,
-                "Error: " + error,
-                Toast.LENGTH_SHORT).show());
+        runOnUiThread(() ->{
+            Log.e(TAG, "WebSocket error: " + error);
+        });
     }
 
     @Override
@@ -175,6 +173,7 @@ public class RoomsActivity extends AppCompatActivity implements GameWebSocketSer
     protected void onDestroy() {
         super.onDestroy();
         if (webSocketService != null) {
+            webSocketService.unsubscribe("/topic/rooms");
             webSocketService.disconnect();
         }
     }

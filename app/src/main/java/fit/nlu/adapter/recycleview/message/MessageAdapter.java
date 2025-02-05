@@ -51,12 +51,16 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     private String messageFactory(Message message) {
         MessageType type = message.getType();
         switch (type) {
+            case GAME_START:
+            case ROUND_START:
+            case ROUND_END:
+            case TURN_START:
+            case TURN_END:
+                return message.getContent();
             case CREATE_ROOM:
                 return message.getSender().getNickname() + " là chủ phòng";
             case CHAT:
                 return message.getSender().getNickname() + ": " + message.getContent();
-            case SYSTEM:
-                return message.getContent();
             case PLAYER_JOIN:
                 return message.getSender().getNickname() + " đã tham gia phòng";
             case PLAYER_LEAVE:

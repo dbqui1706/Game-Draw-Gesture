@@ -32,13 +32,31 @@
                 android:text="120"
                 android:textSize="20dp" />
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
+            <LinearLayout
+                android:id="@+id/layoutStatus"
                 android:layout_weight="1"
                 android:gravity="center"
-                android:text="Chờ đợi"
-                android:textSize="18sp" />
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/tv_waiting"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Chờ đợi"
+                    android:gravity="center"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:visibility="gone"
+                    android:id="@+id/tv_word"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+
 
             <ImageButton
                 android:id="@+id/btnLeaveRoom"
