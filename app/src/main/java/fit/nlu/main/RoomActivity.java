@@ -27,6 +27,7 @@ import fit.nlu.model.Message;
 import fit.nlu.model.Player;
 import fit.nlu.model.Room;
 import fit.nlu.model.RoomSetting;
+import fit.nlu.model.Turn;
 import fit.nlu.service.ApiClient;
 import fit.nlu.service.GameApiService;
 import fit.nlu.service.GameWebSocketService;
@@ -291,21 +292,26 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
                 }
                 // Cập nhật danh sách người chơi
                 players = new ArrayList<>(currentRoom.getPlayers().values());
+
+                if (currentRoom.getState() == RoomState.PLAYING) {
+                    // Lấy thông tin turn hiện tại
+                    Turn currentTurn = currentRoom.getGameSession().getCurrentTurn();
+                    if (currentTurn != null) {
+                        players.forEach(player -> {
+                            if (player.getId().equals(currentTurn.getDrawer().getId())) {
+                                player.setDrawing(true);
+                            } else {
+                                player.setDrawing(false);
+                            }
+                        });
+                    }
+                }
                 runOnUiThread(() -> {
                     uiController.updatePlayerList(players);
                     uiController.updateHeader(currentRoom, currentPlayer);
                 });
                 // Chuyển đổi state
                 stateManager.changeState(currentRoom.getState());
-
-                if (currentRoom.getState() == RoomState.PLAYING){
-                   runOnUiThread(() -> {
-                       uiController.updatePlayerDrawing(players,
-                               currentRoom.getGameSession()
-                                       .getCurrentTurn().getDrawer().getId().toString()
-                       );
-                   });
-                }
             }
         } catch (JsonSyntaxException e) {
             Log.e(TAG, "Error parsing room update", e);
