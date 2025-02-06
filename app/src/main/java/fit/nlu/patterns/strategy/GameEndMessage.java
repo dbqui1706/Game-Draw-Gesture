@@ -7,6 +7,6 @@ public class GameEndMessage implements MessageHandler {
     @Override
     public void handle(Message message, RoomActivity roomActivity) {
         // Update recycler view
-        roomActivity.setUpStatusHeader();
+//        roomActivity.setUpStatusHeader();
     }
 }

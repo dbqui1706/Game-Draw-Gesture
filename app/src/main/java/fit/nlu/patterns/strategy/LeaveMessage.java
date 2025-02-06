@@ -9,6 +9,6 @@ public class LeaveMessage implements MessageHandler {
     public void handle(Message message, RoomActivity roomActivity) {
         // Update recycler view
         Player playerLeave = message.getSender();
-        roomActivity.removePlayerToRV(playerLeave);
+//        roomActivity.removePlayerToRV(playerLeave);
     }
 }

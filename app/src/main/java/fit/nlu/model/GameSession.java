@@ -25,4 +25,10 @@ public class GameSession implements Serializable {
     public Round getCurrentRound() {
         return currentRound;
     }
+
+    public Turn getCurrentTurn() {
+        if (state != GameState.PLAYING) return null;
+        if (currentRound == null) return null;
+        return getCurrentRound().getCurrentTurn();
+    }
 }

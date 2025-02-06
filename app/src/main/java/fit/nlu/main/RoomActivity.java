@@ -97,6 +97,7 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
                 new PlayerAdapter(this),
                 new MessageAdapter(this)
         );
+        uiController.updatePlayerList(players);
         // Hiển thị thông báo tạo phòng (chẳng hạn hiển thị chủ phòng)
         Message ownerMessage = new Message();
         ownerMessage.setType(MessageType.CREATE_ROOM);
@@ -118,8 +119,8 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
      * Lấy dữ liệu từ Intent và khởi tạo các model.
      */
     private void initializeData() {
-        currentRoom = (Room) getIntent().getSerializableExtra(KEY_ROOM);
-        currentPlayer = (Player) getIntent().getSerializableExtra(KEY_PLAYER);
+        currentRoom = getIntent().getSerializableExtra(KEY_ROOM, Room.class);
+        currentPlayer = getIntent().getSerializableExtra(KEY_PLAYER, Player.class);
         owner = currentRoom.getOwner();
         players = new ArrayList<>(currentRoom.getPlayers().values());
     }
@@ -234,10 +235,15 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
             if (turn == null) return;
 
             // Cập nhật header dựa theo loại sự kiện turn
-            uiController.updateTurnHeader(turn.getEventType(), turn.getRemainingTime(),
-                    turn.getKeyword(), turn.getDrawer(), currentPlayer);
-            // Cập nhật trạng thái vẽ cho người chơi
-            uiController.updatePlayerDrawing(players, turn.getDrawer().getId().toString());
+            runOnUiThread(() -> uiController.updateTurnHeader(
+                    turn.getEventType(),
+                    turn.getRemainingTime(),
+                    turn.getKeyword(),
+                    turn.getDrawer(),
+                    currentPlayer,
+                    currentRoom.getPlayers().values()
+            ));
+
         } catch (JsonSyntaxException e) {
             Log.e(TAG, "Error parsing turn message", e);
         }
@@ -289,8 +295,17 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
                     uiController.updatePlayerList(players);
                     uiController.updateHeader(currentRoom, currentPlayer);
                 });
-                // Chuyển đổi state nếu cần
+                // Chuyển đổi state
                 stateManager.changeState(currentRoom.getState());
+
+                if (currentRoom.getState() == RoomState.PLAYING){
+                   runOnUiThread(() -> {
+                       uiController.updatePlayerDrawing(players,
+                               currentRoom.getGameSession()
+                                       .getCurrentTurn().getDrawer().getId().toString()
+                       );
+                   });
+                }
             }
         } catch (JsonSyntaxException e) {
             Log.e(TAG, "Error parsing room update", e);

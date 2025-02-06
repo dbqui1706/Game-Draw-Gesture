@@ -1,18 +1,25 @@
 package fit.nlu.main.controller;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import fit.nlu.adapter.recycleview.message.MessageAdapter;
 import fit.nlu.adapter.recycleview.player.PlayerAdapter;
+import fit.nlu.dto.response.TurnDto;
 import fit.nlu.enums.RoomState;
+import fit.nlu.main.R;
 import fit.nlu.model.Message;
 import fit.nlu.model.Player;
 import fit.nlu.model.Room;
@@ -111,27 +118,29 @@ public class RoomUIController {
      * Cập nhật header của phòng dựa theo trạng thái và turn hiện tại.
      * Nếu state là PLAYING, hiển thị từ cần vẽ hoặc enDash tương ứng.
      */
-    public void updateTurnHeader(String eventType, int remainingTime, String keyword, Player drawer, Player currentPlayer) {
-        switch (eventType) {
-            case "START_TURN":
-                tvWaiting.setVisibility(TextView.GONE);
-                tvWord.setVisibility(TextView.VISIBLE);
+    public void updateTurnHeader(String eventType, int remainingTime,
+                                 String keyword, Player drawer,
+                                 Player currentPlayer,
+                                 Collection<Player> players) {
+        tvWaiting.setVisibility(TextView.GONE);
 
-                // Nếu currentPlayer là người vẽ, hiển thị từ gốc, ngược lại hiển thị dạng enDash
+        switch (eventType) {
+            case "TURN_START":
+                startCountdown(remainingTime);
+                tvWord.setVisibility(TextView.VISIBLE);
                 if (currentPlayer.getId().equals(drawer.getId())) {
                     tvWord.setText("Vẽ từ: " + keyword);
                 } else {
                     tvWord.setText("Đoán từ: " + Util.maskWord(keyword));
                 }
-
-                // Cập nhật countdown dựa theo thời gian còn lại
-                startCountdown(remainingTime);
+                updatePlayerDrawing(players.stream().collect(Collectors.toList())
+                        , drawer.getId().toString());
                 break;
-            case "END_TURN":
+            case "TURN_END":
                 stopCountdown();
-//                tvTimer.setText("60");
-//                tvWord.setVisibility(TextView.GONE);
-//                tvWaiting.setVisibility(TextView.VISIBLE);
+                break;
+            case "GAME_END":
+                cleanupCountdown();
                 break;
             default:
                 break;
@@ -143,9 +152,13 @@ public class RoomUIController {
      */
     public void updatePlayerDrawing(List<Player> players, String drawerId) {
         List<Player> updatedPlayers = new ArrayList<>(players);
-        updatedPlayers = updatedPlayers.stream()
-                .peek(player -> player.setDrawing(player.getId().equals(drawerId)))
-                .collect(Collectors.toList());
+        updatedPlayers.forEach(player -> {
+            if (player.getId().toString().equals(drawerId)) {
+                player.setDrawing(true);
+            } else {
+                player.setDrawing(false);
+            }
+        });
         updatePlayerList(updatedPlayers);
     }
 
