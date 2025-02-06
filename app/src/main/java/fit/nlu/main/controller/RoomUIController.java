@@ -108,6 +108,37 @@ public class RoomUIController {
     }
 
     /**
+     * Cập nhật header của phòng dựa theo trạng thái và turn hiện tại.
+     * Nếu state là PLAYING, hiển thị từ cần vẽ hoặc enDash tương ứng.
+     */
+    public void updateTurnHeader(String eventType, int remainingTime, String keyword, Player drawer, Player currentPlayer) {
+        switch (eventType) {
+            case "START_TURN":
+                tvWaiting.setVisibility(TextView.GONE);
+                tvWord.setVisibility(TextView.VISIBLE);
+
+                // Nếu currentPlayer là người vẽ, hiển thị từ gốc, ngược lại hiển thị dạng enDash
+                if (currentPlayer.getId().equals(drawer.getId())) {
+                    tvWord.setText("Vẽ từ: " + keyword);
+                } else {
+                    tvWord.setText("Đoán từ: " + Util.maskWord(keyword));
+                }
+
+                // Cập nhật countdown dựa theo thời gian còn lại
+                startCountdown(remainingTime);
+                break;
+            case "END_TURN":
+                stopCountdown();
+//                tvTimer.setText("60");
+//                tvWord.setVisibility(TextView.GONE);
+//                tvWaiting.setVisibility(TextView.VISIBLE);
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
      * Cập nhật trạng thái “vẽ” cho danh sách người chơi, dựa theo ID của người vẽ.
      */
     public void updatePlayerDrawing(List<Player> players, String drawerId) {
@@ -144,4 +175,6 @@ public class RoomUIController {
             countdownManager.cleanup();
         }
     }
+
+
 }
