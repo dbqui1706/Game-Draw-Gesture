@@ -9,15 +9,20 @@ import java.util.UUID;
 import fit.nlu.enums.GameState;
 import lombok.Data;
 
-@Data
 public class GameSession implements Serializable {
-    private UUID id;
-    private Room room;
+    private String id;
     private List<Round> rounds;
     private Round currentRound;
     private List<Player> players;
-    private Map<UUID, Integer> scores;
     private GameState state;
     private Timestamp startTime;
     private Timestamp endTime;
+    private int currentRoundNumber;
+    private int totalRounds;
+    private int turnTimeLimit;
+    private String roomId;
+
+    public Round getCurrentRound() {
+        return currentRound;
+    }
 }

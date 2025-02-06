@@ -11,7 +11,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import okhttp3.WebSocket;
 import ua.naiksoftware.stomp.Stomp;
 import ua.naiksoftware.stomp.StompClient;
 import ua.naiksoftware.stomp.dto.LifecycleEvent;
@@ -23,7 +22,7 @@ import ua.naiksoftware.stomp.dto.LifecycleEvent;
  */
 public class GameWebSocketService implements Serializable {
     private static final String TAG = "WebSocketManager";
-    private static final String WS_URL = "ws://192.168.31.210:8081/ws/websocket";
+    private static final String WS_URL = "ws://192.168.2.14:8081/ws/websocket";
 
     // Lưu trữ các disposables để quản lý subscriptions
     private final CompositeDisposable compositeDisposable;
@@ -31,7 +30,6 @@ public class GameWebSocketService implements Serializable {
     private final Map<String, Disposable> topicSubscriptions;
     private final StompClient stompClient;
     private final WebSocketEventListener eventListener;
-    private WebSocket webSocket;
 
     public interface WebSocketEventListener {
         void onConnected();

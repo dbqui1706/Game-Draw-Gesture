@@ -26,13 +26,7 @@ public class WaitingStateHandler extends RoomStateHandler {
 
     @Override
     public Fragment getStateFragment() {
-        if (fragment == null) {
-            fragment = FragmentWaitingRoom.newInstance(
-                    webSocket,
-                    roomActivity.getCurrentRoom(),
-                    roomActivity.getCurrentPlayer()
-            );
-        }
+        fragment = new FragmentWaitingRoom(webSocket, roomActivity.getCurrentRoom(), roomActivity.getCurrentPlayer());
         return fragment;
     }
 
