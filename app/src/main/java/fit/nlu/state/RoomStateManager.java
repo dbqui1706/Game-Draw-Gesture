@@ -49,5 +49,4 @@ public class RoomStateManager {
             stateHandlers.get(currentState).handlePlayerAction(action, params);
         }
     }
-
 }

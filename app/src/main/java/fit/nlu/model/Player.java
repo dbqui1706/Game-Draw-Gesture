@@ -14,7 +14,7 @@ public class Player implements Serializable {
     private boolean isOwner;
     private String avatar;
     private int score;
-    private boolean isDrawing = false;
+    private boolean drawing;
     private PlayerStatus status;
 
     public Player(String nickname, String avatar, boolean isOwner) {
@@ -22,7 +22,7 @@ public class Player implements Serializable {
         this.nickname = nickname;
         this.avatar = avatar;
         this.isOwner = isOwner;
-        this.isDrawing = false;
+        this.drawing = false;
         this.status = PlayerStatus.IDLE;
     }
 
@@ -51,14 +51,14 @@ public class Player implements Serializable {
     }
 
     public boolean isDrawing() {
-        return isDrawing;
+        return drawing;
     }
 
     public PlayerStatus getStatus() {
         return status;
     }
     public void setDrawing(boolean drawing) {
-        isDrawing = drawing;
+        this.drawing = drawing;
     }
     public void setOwner(boolean owner) {
         this.isOwner = owner;

@@ -47,6 +47,19 @@ public class CountdownManager {
         handler.post(countdownRunnable);
     }
 
+    public void updateTimeFromServer(int serverTime) {
+        // Cập nhật thời gian từ server
+        currentValue = serverTime;
+        updateTimerDisplay();
+    }
+
+    private void updateTimerDisplay() {
+        if (countdownTextView != null) {
+            countdownTextView.post(() -> countdownTextView.setText(String.valueOf(currentValue)));
+        }
+    }
+
+
     public void stopCountdown() {
         isRunning = false;
         if (handler != null && countdownRunnable != null) {
@@ -77,6 +90,7 @@ public class CountdownManager {
     // Trong Activity hoặc Fragment
     public void cleanup() {
         stopCountdown();
+        handler.removeCallbacksAndMessages(null);
         handler = null;
     }
 }

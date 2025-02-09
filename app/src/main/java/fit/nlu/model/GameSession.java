@@ -9,6 +9,7 @@ import java.util.UUID;
 import fit.nlu.enums.GameState;
 import lombok.Data;
 
+@Data
 public class GameSession implements Serializable {
     private String id;
     private List<Round> rounds;

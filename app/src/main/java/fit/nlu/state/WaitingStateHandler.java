@@ -2,6 +2,7 @@ package fit.nlu.state;
 
 import androidx.fragment.app.Fragment;
 
+import fit.nlu.enums.RoomState;
 import fit.nlu.fragment.FragmentWaitingRoom;
 import fit.nlu.main.RoomActivity;
 import fit.nlu.model.RoomSetting;

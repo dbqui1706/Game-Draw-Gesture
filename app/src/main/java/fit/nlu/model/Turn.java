@@ -3,7 +3,9 @@ package fit.nlu.model;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Stack;
 
+import fit.nlu.canvas.DrawingData;
 import fit.nlu.enums.TurnState;
 import lombok.Data;
 
@@ -17,7 +19,9 @@ public class Turn implements Serializable {
     private Timestamp startTime;
     private Timestamp endTime;
     private int timeLimit; // giây
+    private int serverRemainingTime;
     private String roomId;
+    private List<DrawingData> drawingDataList;
 
     public String getId() {
         return id;
@@ -55,11 +59,20 @@ public class Turn implements Serializable {
         return roomId;
     }
 
+    public int getServerRemainingTime() {
+        return serverRemainingTime;
+    }
+
+    public List<DrawingData> getDrawingDataList() {
+        return drawingDataList;
+    }
+
     public int getRemainingTime() {
         if (startTime == null) return timeLimit;
-        long elapsedMillis = System.currentTimeMillis() - startTime.getTime();
-        int elapsedSeconds = (int) (elapsedMillis / 1000);
-        int remaining = timeLimit - elapsedSeconds;
+        long serverStartTime = startTime.getTime(); // timestamp từ server
+        int timeLimit = this.timeLimit;
+        long clientNow = System.currentTimeMillis();
+        int remaining = timeLimit - (int) ((clientNow - serverStartTime) / 1000);
         return Math.max(0, remaining);
     }
 }

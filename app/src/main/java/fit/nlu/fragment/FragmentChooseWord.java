@@ -18,20 +18,20 @@ public class FragmentChooseWord extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_choose_word, container, false);
-
-        // Giả lập 3 từ để chọn
-        Button btnWord1 = view.findViewById(R.id.btnWord1);
-        Button btnWord2 = view.findViewById(R.id.btnWord2);
-        Button btnWord3 = view.findViewById(R.id.btnWord3);
-
-        View.OnClickListener wordClickListener = v -> {
-            // Khi chọn từ xong, chuyển sang giao diện vẽ
-            ((RoomActivity) requireActivity()).replaceFragment(new FragmentDraw());
-        };
-
-        btnWord1.setOnClickListener(wordClickListener);
-        btnWord2.setOnClickListener(wordClickListener);
-        btnWord3.setOnClickListener(wordClickListener);
+//
+//        // Giả lập 3 từ để chọn
+//        Button btnWord1 = view.findViewById(R.id.btnWord1);
+//        Button btnWord2 = view.findViewById(R.id.btnWord2);
+//        Button btnWord3 = view.findViewById(R.id.btnWord3);
+//
+//        View.OnClickListener wordClickListener = v -> {
+//            // Khi chọn từ xong, chuyển sang giao diện vẽ
+//            ((RoomActivity) requireActivity()).replaceFragment(new FragmentDraw());
+//        };
+//
+//        btnWord1.setOnClickListener(wordClickListener);
+//        btnWord2.setOnClickListener(wordClickListener);
+//        btnWord3.setOnClickListener(wordClickListener);
 
         return view;
     }

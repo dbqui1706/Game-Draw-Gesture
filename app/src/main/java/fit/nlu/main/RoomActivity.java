@@ -1,6 +1,5 @@
 package fit.nlu.main;
 
-import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageButton;
@@ -20,7 +19,7 @@ import java.util.List;
 
 import fit.nlu.adapter.recycleview.message.MessageAdapter;
 import fit.nlu.adapter.recycleview.player.PlayerAdapter;
-import fit.nlu.dto.response.TurnDto;
+import fit.nlu.canvas.DrawingData;
 import fit.nlu.enums.MessageType;
 import fit.nlu.enums.RoomState;
 import fit.nlu.model.Message;
@@ -43,14 +42,16 @@ import retrofit2.Response;
  */
 public class RoomActivity extends AppCompatActivity implements GameWebSocketService.WebSocketEventListener {
     private static final String TAG = "RoomActivity";
-    private static final String KEY_ROOM = "room";
-    private static final String KEY_PLAYER = "player";
+    public static final String KEY_ROOM = "room";
+    public static final String KEY_PLAYER = "player";
+    public static final String WEB_SOCKET_SERVICE = "webSocketService";
 
     // Services
     private GameApiService gameApiService;
     private GameWebSocketService webSocketService;
 
     // Data models
+    private Turn currentTurn;
     private Room currentRoom;
     private Player currentPlayer;
     private Player owner;
@@ -72,7 +73,7 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_create_room);
+        setContentView(R.layout.activity_room);
 
         // Khởi tạo UI components
         tvTimer = findViewById(R.id.tvTime);
@@ -90,6 +91,7 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
 
         // Khởi tạo controller UI
         uiController = new RoomUIController(
+                currentRoom,
                 rvPlayers,
                 rvChat,
                 tvTimer,
@@ -98,7 +100,11 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
                 new PlayerAdapter(this),
                 new MessageAdapter(this)
         );
+        // Cập nhật UI header ban đầu
+        uiController.updateHeader(currentTurn, currentPlayer);
+        // Cập nhật danh sách người chơi
         uiController.updatePlayerList(players);
+
         // Hiển thị thông báo tạo phòng (chẳng hạn hiển thị chủ phòng)
         Message ownerMessage = new Message();
         ownerMessage.setType(MessageType.CREATE_ROOM);
@@ -111,9 +117,6 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
         // Khởi tạo state manager
         stateManager = new RoomStateManager(this, webSocketService);
         stateManager.changeState(currentRoom.getState());
-
-        // Cập nhật UI header ban đầu
-        uiController.updateHeader(currentRoom, currentPlayer);
     }
 
     /**
@@ -122,6 +125,9 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
     private void initializeData() {
         currentRoom = getIntent().getSerializableExtra(KEY_ROOM, Room.class);
         currentPlayer = getIntent().getSerializableExtra(KEY_PLAYER, Player.class);
+        if (currentRoom.getGameSession() != null) {
+            currentTurn = currentRoom.getGameSession().getCurrentTurn();
+        }
         owner = currentRoom.getOwner();
         players = new ArrayList<>(currentRoom.getPlayers().values());
     }
@@ -167,9 +173,25 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
      * Thay thế fragment hiện tại.
      */
     public void replaceFragment(Fragment fragment) {
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragmentContainer, fragment)
-                .commit();
+        if (!isFinishing() && !isDestroyed()) {
+            // Truyền data vào fragment
+            Bundle args = new Bundle();
+            args.putSerializable(WEB_SOCKET_SERVICE, webSocketService);
+            args.putSerializable(KEY_ROOM, currentRoom);
+            args.putSerializable(KEY_PLAYER, currentPlayer);
+            fragment.setArguments(args);
+
+            // Log để debug
+            Log.d(TAG, "Replacing fragment: " + fragment.getClass().getSimpleName());
+            Log.d(TAG, "Current room: " + (currentRoom != null ? currentRoom.getId() : "null"));
+            Log.d(TAG, "Current player: " + (currentPlayer != null ? currentPlayer.getId() : "null"));
+
+
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragmentContainer, fragment)
+                    .commitNow();
+        }
     }
 
     /**
@@ -186,10 +208,14 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
         String roomId = currentRoom.getId().toString();
         String[] topics = {
                 "/topic/room/" + roomId + "/update",
+                "/topic/room/" + roomId + "/join",
+                "/topic/room/" + roomId + "/leave",
+                "/topic/room/" + roomId + "/turn",
                 "/topic/room/" + roomId + "/message",
                 "/topic/room/" + roomId + "/options",
                 "/topic/room/" + roomId + "/start",
-                "/topic/room/" + roomId + "/turn"
+                "/topic/room/" + roomId + "/time",
+                "/topic/room/" + roomId + "/draw"
         };
         for (String topic : topics) {
             webSocketService.subscribe(topic);
@@ -222,31 +248,83 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
             onReceiveMessage(message);
         } else if (topic.equals("/topic/room/" + roomId + "/options")) {
             onUpdateSetting(message);
+        } else if (topic.equals("/topic/room/" + roomId + "/time")) {
+            onUpdateTime(message);
+        } else if (topic.equals("/topic/room/" + roomId + "/start")) {
+            currentRoom.setState(RoomState.PLAYING);
+            stateManager.changeState(currentRoom.getState());
+        } else if (topic.equals("/topic/room/" + roomId + "/draw")) {
+            onDrawingData(message);
+        } else if (topic.equals("/topic/room/" + roomId + "/leave")) {
+            onPlayerLeave(message);
         } else if (topic.equals("/topic/room/" + roomId + "/turn")) {
-            onTurnEvent(message);
+            onTurnChange(message);
         }
     }
 
-    /**
-     * Xử lý sự kiện turn nhận từ server.
-     */
-    private void onTurnEvent(String message) {
+    private void onTurnChange(String message) {
         try {
-            TurnDto turn = gson.fromJson(message, TurnDto.class);
+            currentRoom.setState(RoomState.PLAYING);
+            Turn turn = gson.fromJson(message, Turn.class);
             if (turn == null) return;
+            currentTurn = turn;
 
-            // Cập nhật header dựa theo loại sự kiện turn
-            runOnUiThread(() -> uiController.updateTurnHeader(
-                    turn.getEventType(),
-                    turn.getRemainingTime(),
-                    turn.getKeyword(),
-                    turn.getDrawer(),
-                    currentPlayer,
-                    currentRoom.getPlayers().values()
-            ));
+            // Update UI player list that Player is drawer, header, timer
+            runOnUiThread(() -> {
+                uiController.updateHeader(currentTurn, currentPlayer);
+                uiController.updateDrawingStatus(players, currentTurn.getDrawer().getId().toString());
+            });
+
+            stateManager.changeState(RoomState.PLAYING);
+        } catch (JsonSyntaxException e) {
+            Log.e(TAG, "Error parsing turn change", e);
+        }
+
+    }
+
+    private void onPlayerLeave(String message) {
+        try {
+            Player leavingPlayer = gson.fromJson(message, Player.class);
+            if (leavingPlayer != null) {
+                // Xóa player dựa trên ID thay vì object
+                players.removeIf(p -> p.getId().equals(leavingPlayer.getId()));
+
+                runOnUiThread(() -> {
+                    uiController.setRoom(currentRoom);
+                    uiController.updatePlayerList(new ArrayList<>(players));
+                });
+            }
+        } catch (JsonSyntaxException e) {
+            Log.e(TAG, "Error parsing player leave", e);
+        }
+    }
+
+    public void onDrawingData(String message) {
+        try {
+            Log.d(TAG, "onDrawingData: " + message);
+            DrawingData drawingData = gson.fromJson(message, DrawingData.class);
+            if (drawingData != null) {
+                stateManager.handlePlayerAction("DRAWING", drawingData);
+            }
+        } catch (JsonSyntaxException e) {
+            Log.e(TAG, "Error parsing drawing data", e);
+        }
+    }
+
+
+    /**
+     * Xử lý cập nhật thời gian từ server.
+     */
+    private void onUpdateTime(String message) {
+        try {
+            Message timeMessage = gson.fromJson(message, Message.class);
+            if (timeMessage != null) {
+                int time = Integer.parseInt(timeMessage.getContent());
+                runOnUiThread(() -> uiController.updateTimeFromServer(time));
+            }
 
         } catch (JsonSyntaxException e) {
-            Log.e(TAG, "Error parsing turn message", e);
+            Log.e(TAG, "Error parsing time update", e);
         }
     }
 
@@ -285,6 +363,9 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
         try {
             Room updatedRoom = gson.fromJson(message, Room.class);
             if (updatedRoom != null) {
+                for (Player player : updatedRoom.getPlayers().values()) {
+                    Log.d(TAG, "onRoomUpdate Player: " + player.getNickname() + " | isDrawing: " + player.isDrawing());
+                }
                 currentRoom = updatedRoom;
                 // Nếu currentPlayer trở thành owner, cập nhật trạng thái
                 if (currentRoom.getOwner().getId().equals(currentPlayer.getId())) {
@@ -293,25 +374,18 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
                 // Cập nhật danh sách người chơi
                 players = new ArrayList<>(currentRoom.getPlayers().values());
 
-                if (currentRoom.getState() == RoomState.PLAYING) {
-                    // Lấy thông tin turn hiện tại
-                    Turn currentTurn = currentRoom.getGameSession().getCurrentTurn();
-                    if (currentTurn != null) {
-                        players.forEach(player -> {
-                            if (player.getId().equals(currentTurn.getDrawer().getId())) {
-                                player.setDrawing(true);
-                            } else {
-                                player.setDrawing(false);
-                            }
-                        });
-                    }
-                }
+                // Cập nhật UI
                 runOnUiThread(() -> {
+                    uiController.setRoom(currentRoom);
                     uiController.updatePlayerList(players);
-                    uiController.updateHeader(currentRoom, currentPlayer);
+                    uiController.updateHeader(currentTurn, currentPlayer);
                 });
-                // Chuyển đổi state
-                stateManager.changeState(currentRoom.getState());
+
+                // Cập nhật trạng thái phòng nếu chỉ còn 1 người chơi
+                if (players.size() < 2) {
+                    currentRoom.setState(RoomState.WAITING);
+                    stateManager.changeState(currentRoom.getState());
+                }
             }
         } catch (JsonSyntaxException e) {
             Log.e(TAG, "Error parsing room update", e);
@@ -329,14 +403,23 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.d(TAG, "RoomActivity onDestroy");
         if (webSocketService != null) {
             String roomId = currentRoom.getId().toString();
             webSocketService.unsubscribe("/topic/room/" + roomId + "/update");
             webSocketService.unsubscribe("/topic/room/" + roomId + "/message");
             webSocketService.unsubscribe("/topic/room/" + roomId + "/options");
             webSocketService.unsubscribe("/topic/room/" + roomId + "/start");
+            webSocketService.unsubscribe("/topic/room/" + roomId + "/time");
+            webSocketService.unsubscribe("/topic/room/" + roomId + "/draw");
+            webSocketService.unsubscribe("/topic/room/" + roomId + "/join");
+            webSocketService.unsubscribe("/topic/room/" + roomId + "/leave");
             webSocketService.unsubscribe("/topic/room/" + roomId + "/turn");
             webSocketService.disconnect();
         }
+    }
+
+    public Turn getCurrentTurn() {
+        return currentTurn != null ? currentTurn : currentRoom.getGameSession().getCurrentTurn();
     }
 }

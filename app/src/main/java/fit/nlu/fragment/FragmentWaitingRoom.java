@@ -168,6 +168,4 @@ public class FragmentWaitingRoom extends Fragment {
             webSocketService.sendMessage(destination, "");
         });
     }
-
-
 }

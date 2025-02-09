@@ -4,5 +4,6 @@ public enum RoomState {
     WAITING,
     CHOOSING,
     PLAYING,
-    FINISHED
+    FINISHED,
+    GAME_END
 }

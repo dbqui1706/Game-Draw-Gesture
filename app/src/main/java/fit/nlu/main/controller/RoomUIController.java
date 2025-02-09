@@ -7,19 +7,13 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import fit.nlu.adapter.recycleview.message.MessageAdapter;
 import fit.nlu.adapter.recycleview.player.PlayerAdapter;
-import fit.nlu.dto.response.TurnDto;
 import fit.nlu.enums.RoomState;
-import fit.nlu.main.R;
 import fit.nlu.model.Message;
 import fit.nlu.model.Player;
 import fit.nlu.model.Room;
@@ -33,6 +27,8 @@ import fit.nlu.utils.Util;
  */
 public class RoomUIController {
     private static final String TAG = "RoomUIController";
+    private Room room;
+
 
     // UI Components
     private final RecyclerView rvPlayers;
@@ -48,9 +44,10 @@ public class RoomUIController {
     // Utils
     private CountdownManager countdownManager;
 
-    public RoomUIController(RecyclerView rvPlayers, RecyclerView rvChat, TextView tvTimer,
+    public RoomUIController(Room room, RecyclerView rvPlayers, RecyclerView rvChat, TextView tvTimer,
                             TextView tvWord, TextView tvWaiting, PlayerAdapter playerAdapter,
                             MessageAdapter messageAdapter) {
+        this.room = room;
         this.rvPlayers = rvPlayers;
         this.rvChat = rvChat;
         this.tvTimer = tvTimer;
@@ -66,7 +63,9 @@ public class RoomUIController {
         rvPlayers.setLayoutManager(new LinearLayoutManager(rvPlayers.getContext()));
         rvPlayers.setAdapter(playerAdapter);
 
-        rvChat.setLayoutManager(new LinearLayoutManager(rvChat.getContext()));
+        LinearLayoutManager rvChatLayout = new LinearLayoutManager(rvChat.getContext());
+        rvChatLayout.setStackFromEnd(true);
+        rvChat.setLayoutManager(rvChatLayout);
         rvChat.setAdapter(messageAdapter);
     }
 
@@ -89,105 +88,50 @@ public class RoomUIController {
      * Nếu state là PLAYING, hiển thị từ cần vẽ hoặc enDash tương ứng.
      */
     @SuppressLint("SetTextI18n")
-    public void updateHeader(Room room, Player currentPlayer) {
+    public void updateHeader(Turn turn, Player currentPlayer) {
         if (room.getState() == RoomState.PLAYING) {
-            Turn currentTurn = room.getGameSession().getCurrentRound().getCurrentTurn();
-            if (currentTurn == null) return;
+            if (turn == null) return;
 
             tvWaiting.setVisibility(TextView.GONE);
             tvWord.setVisibility(TextView.VISIBLE);
 
-            // Nếu currentPlayer là người vẽ, hiển thị từ gốc, ngược lại hiển thị dạng enDash
-            if (currentPlayer.getId().equals(currentTurn.getDrawer().getId())) {
-                tvWord.setText("Vẽ từ: " + currentTurn.getKeyword());
-            } else {
-                tvWord.setText("Đoán từ: " + Util.maskWord(currentTurn.getKeyword()));
+            // Khởi tạo countdown manager nếu chưa có
+            if (countdownManager == null) {
+                countdownManager = new CountdownManager(tvTimer);
             }
 
-            // Cập nhật countdown dựa theo thời gian còn lại
-            startCountdown(currentTurn.getRemainingTime());
-        } else if (room.getState() == RoomState.WAITING) {
-            stopCountdown();
+            // Cập nhật từ khóa dựa trên vai trò người chơi
+            if (currentPlayer.getId().equals(turn.getDrawer().getId())) {
+                tvWord.setText("Vẽ từ: " + turn.getKeyword());
+            } else {
+                tvWord.setText("Đoán từ: " + Util.maskWord(turn.getKeyword()));
+            }
+        } else if (room.getState() == RoomState.WAITING || room.getState() == RoomState.GAME_END) {
+            if (countdownManager != null) {
+                countdownManager.cleanup();
+            }
             tvTimer.setText("60");
             tvWord.setVisibility(TextView.GONE);
             tvWaiting.setVisibility(TextView.VISIBLE);
         }
     }
 
-    /**
-     * Cập nhật header của phòng dựa theo trạng thái và turn hiện tại.
-     * Nếu state là PLAYING, hiển thị từ cần vẽ hoặc enDash tương ứng.
-     */
-    public void updateTurnHeader(String eventType, int remainingTime,
-                                 String keyword, Player drawer,
-                                 Player currentPlayer,
-                                 Collection<Player> players) {
-        tvWaiting.setVisibility(TextView.GONE);
-
-        switch (eventType) {
-            case "TURN_START":
-                startCountdown(remainingTime);
-                tvWord.setVisibility(TextView.VISIBLE);
-                if (currentPlayer.getId().equals(drawer.getId())) {
-                    tvWord.setText("Vẽ từ: " + keyword);
-                } else {
-                    tvWord.setText("Đoán từ: " + Util.maskWord(keyword));
-                }
-                updatePlayerDrawing(players.stream().collect(Collectors.toList())
-                        , drawer.getId().toString());
-                break;
-            case "TURN_END":
-                stopCountdown();
-                break;
-            case "GAME_END":
-                cleanupCountdown();
-                break;
-            default:
-                break;
-        }
-    }
-
-    /**
-     * Cập nhật trạng thái “vẽ” cho danh sách người chơi, dựa theo ID của người vẽ.
-     */
-    public void updatePlayerDrawing(List<Player> players, String drawerId) {
-        List<Player> updatedPlayers = new ArrayList<>(players);
-        updatedPlayers.forEach(player -> {
-            if (player.getId().toString().equals(drawerId)) {
-                player.setDrawing(true);
-            } else {
-                player.setDrawing(false);
-            }
-        });
-        updatePlayerList(updatedPlayers);
-    }
-
-    /**
-     * Khởi tạo và bắt đầu đếm ngược.
-     */
-    public void startCountdown(int seconds) {
-        stopCountdown();
-        countdownManager = new CountdownManager(tvTimer);
-        countdownManager.startCountdown(seconds);
-    }
-
-    /**
-     * Dừng đếm ngược.
-     */
-    public void stopCountdown() {
+    public void updateTimeFromServer(int serverTime) {
         if (countdownManager != null) {
-            countdownManager.stopCountdown();
+            countdownManager.updateTimeFromServer(serverTime);
         }
     }
 
     /**
-     * Dọn dẹp bộ đếm ngược.
+     * Cập nhật trạng thái vẽ cho người chơi.
      */
-    public void cleanupCountdown() {
-        if (countdownManager != null) {
-            countdownManager.cleanup();
+    public void updateDrawingStatus(Collection<Player> players, String drawerId) {
+        if (drawerId != null) {
+            players.forEach(player -> player.setDrawing(player.getId().toString().equals(drawerId)));
         }
+        updatePlayerList(new ArrayList<>(players));
     }
-
-
+    public void setRoom(Room room) {
+        this.room = room;
+    }
 }
