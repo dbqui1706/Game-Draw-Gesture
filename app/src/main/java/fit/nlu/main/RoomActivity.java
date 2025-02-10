@@ -2,6 +2,9 @@ package fit.nlu.main;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -22,6 +25,7 @@ import fit.nlu.adapter.recycleview.player.PlayerAdapter;
 import fit.nlu.canvas.DrawingData;
 import fit.nlu.enums.MessageType;
 import fit.nlu.enums.RoomState;
+import fit.nlu.main.controller.RoomUIController;
 import fit.nlu.model.Message;
 import fit.nlu.model.Player;
 import fit.nlu.model.Room;
@@ -31,7 +35,6 @@ import fit.nlu.service.ApiClient;
 import fit.nlu.service.GameApiService;
 import fit.nlu.service.GameWebSocketService;
 import fit.nlu.state.RoomStateManager;
-import fit.nlu.main.controller.RoomUIController;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -69,6 +72,9 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
     private RecyclerView rvChat;
     private ImageButton btnLeaveRoom;
     private TextView tvTimer, tvWord, tvWaiting;
+    private EditText etChatInput;
+    private TextView btnSend;
+    private View chatInputLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +88,9 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
         rvPlayers = findViewById(R.id.rvPlayers);
         rvChat = findViewById(R.id.rvChat);
         btnLeaveRoom = findViewById(R.id.btnLeaveRoom);
+        chatInputLayout = findViewById(R.id.chatInputLayout);
+        etChatInput = findViewById(R.id.etChatInput);
+        btnSend = findViewById(R.id.btnSend);
 
         // Lấy dữ liệu từ Intent
         initializeData();
@@ -98,7 +107,11 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
                 tvWord,
                 tvWaiting,
                 new PlayerAdapter(this),
-                new MessageAdapter(this)
+                new MessageAdapter(this),
+                this,
+                etChatInput,
+                btnSend,
+                chatInputLayout
         );
         // Cập nhật UI header ban đầu
         uiController.updateHeader(currentTurn, currentPlayer);
@@ -113,6 +126,7 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
 
         // Cài đặt nút rời phòng
         setupLeaveButton();
+        setUpSendButton();
 
         // Khởi tạo state manager
         stateManager = new RoomStateManager(this, webSocketService);
@@ -145,6 +159,28 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
      */
     private void setupLeaveButton() {
         btnLeaveRoom.setOnClickListener(v -> onLeaveRoom());
+    }
+
+    private void setUpSendButton() {
+        btnSend.setOnClickListener(v -> onSendChatMessage());
+    }
+
+    /**
+     * Gửi tin nhắn chat.
+     */
+    public void onSendChatMessage() {
+        String content = etChatInput.getText().toString().trim();
+        if (!content.isEmpty()) {
+            Message message = new Message();
+            message.setSender(currentPlayer);
+            message.setContent(content);
+            message.setType(MessageType.CHAT);
+            String destination = "/app/room/" + currentRoom.getId() + "/guess";
+            String payload = gson.toJson(message);
+            Log.d(TAG, "Sending message: " + payload);
+            webSocketService.sendMessage(destination, payload);
+            etChatInput.setText("");
+        }
     }
 
     /**
@@ -193,14 +229,6 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
                     .commitNow();
         }
     }
-
-    /**
-     * Kiểm tra currentPlayer có phải là chủ phòng không.
-     */
-    public boolean isOwner() {
-        return currentPlayer.getId().equals(owner.getId());
-    }
-
     // --- WebSocket event handlers ---
 
     @Override
@@ -215,7 +243,8 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
                 "/topic/room/" + roomId + "/options",
                 "/topic/room/" + roomId + "/start",
                 "/topic/room/" + roomId + "/time",
-                "/topic/room/" + roomId + "/draw"
+                "/topic/room/" + roomId + "/draw",
+                "/topic/room/" + roomId + "/guess"
         };
         for (String topic : topics) {
             webSocketService.subscribe(topic);
@@ -257,8 +286,42 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
             onDrawingData(message);
         } else if (topic.equals("/topic/room/" + roomId + "/leave")) {
             onPlayerLeave(message);
+        } else if (topic.equals("/topic/room/" + roomId + "/join")) {
+            onPlayerJoin(message);
         } else if (topic.equals("/topic/room/" + roomId + "/turn")) {
             onTurnChange(message);
+        } else if (topic.equals("/topic/room/" + roomId + "/guess")) {
+            onGuess(message);
+        }
+    }
+
+    private void onPlayerJoin(String message) {
+        try {
+            Player joiningPlayer = gson.fromJson(message, Player.class);
+            if (joiningPlayer != null) {
+                currentRoom.getPlayers().put(joiningPlayer.getId(), joiningPlayer);
+                players.add(joiningPlayer);
+                runOnUiThread(() -> {
+                    uiController.setRoom(currentRoom);
+                    uiController.updatePlayerList(new ArrayList<>(players));
+                });
+            }
+        } catch (JsonSyntaxException e) {
+            Log.e(TAG, "Error parsing player join", e);
+        }
+    }
+
+    /**
+     * Xử lý tin nhắn chat nhận từ server.
+     */
+    private void onGuess(String message) {
+        try {
+            Message guessMessage = gson.fromJson(message, Message.class);
+            if (guessMessage != null) {
+                runOnUiThread(() -> uiController.addChatMessage(guessMessage));
+            }
+        } catch (JsonSyntaxException e) {
+            Log.e(TAG, "Error parsing guess message", e);
         }
     }
 
@@ -311,7 +374,6 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
         }
     }
 
-
     /**
      * Xử lý cập nhật thời gian từ server.
      */
@@ -363,9 +425,6 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
         try {
             Room updatedRoom = gson.fromJson(message, Room.class);
             if (updatedRoom != null) {
-                for (Player player : updatedRoom.getPlayers().values()) {
-                    Log.d(TAG, "onRoomUpdate Player: " + player.getNickname() + " | isDrawing: " + player.isDrawing());
-                }
                 currentRoom = updatedRoom;
                 // Nếu currentPlayer trở thành owner, cập nhật trạng thái
                 if (currentRoom.getOwner().getId().equals(currentPlayer.getId())) {
@@ -374,15 +433,11 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
                 // Cập nhật danh sách người chơi
                 players = new ArrayList<>(currentRoom.getPlayers().values());
 
-                // Cập nhật UI
-                runOnUiThread(() -> {
-                    uiController.setRoom(currentRoom);
-                    uiController.updatePlayerList(players);
-                    uiController.updateHeader(currentTurn, currentPlayer);
-                });
-
-                // Cập nhật trạng thái phòng nếu chỉ còn 1 người chơi
+                uiController.setRoom(currentRoom);
+                uiController.updatePlayerList(players);
+                uiController.updateHeader(currentTurn, currentPlayer);
                 if (players.size() < 2) {
+                    Log.d(TAG, "Room only has 1 player left");
                     currentRoom.setState(RoomState.WAITING);
                     stateManager.changeState(currentRoom.getState());
                 }
@@ -421,5 +476,11 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
 
     public Turn getCurrentTurn() {
         return currentTurn != null ? currentTurn : currentRoom.getGameSession().getCurrentTurn();
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        uiController.dispatchTouchEvent(ev, this);
+        return super.dispatchTouchEvent(ev);
     }
 }

@@ -57,6 +57,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
             case TURN_START:
             case TURN_END:
             case GAME_END:
+            case CHAT:
                 return message.getContent();
             case CREATE_ROOM:
                 return message.getSender().getNickname() + " là chủ phòng";

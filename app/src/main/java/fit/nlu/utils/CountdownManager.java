@@ -90,7 +90,6 @@ public class CountdownManager {
     // Trong Activity hoặc Fragment
     public void cleanup() {
         stopCountdown();
-        handler.removeCallbacksAndMessages(null);
         handler = null;
     }
 }
