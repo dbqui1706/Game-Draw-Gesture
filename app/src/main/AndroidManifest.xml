@@ -36,7 +36,8 @@
         <activity
             android:name=".RoomActivity"
             android:screenOrientation="landscape"
-            android:exported="false"></activity>
+            android:exported="false">
+        </activity>
     </application>
 
 </manifest>

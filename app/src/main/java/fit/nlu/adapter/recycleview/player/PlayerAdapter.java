@@ -32,6 +32,7 @@ public class PlayerAdapter extends RecyclerView.Adapter<PlayerAdapter.PlayerView
         ImageView ivPlayerAvatar;
         TextView tvPlayerName;
         TextView tvPlayerScore;
+        ImageView ivPlayerDrawing;
 
         public PlayerViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -39,6 +40,7 @@ public class PlayerAdapter extends RecyclerView.Adapter<PlayerAdapter.PlayerView
             ivPlayerAvatar = itemView.findViewById(R.id.ivPlayerAvatar);
             tvPlayerName = itemView.findViewById(R.id.tvPlayerName);
             tvPlayerScore = itemView.findViewById(R.id.tvPlayerScore);
+            ivPlayerDrawing = itemView.findViewById(R.id.ivPlayerDrawing);
         }
     }
 
@@ -58,7 +60,11 @@ public class PlayerAdapter extends RecyclerView.Adapter<PlayerAdapter.PlayerView
         // Cập nhật giao diện với thông tin người chơi
         holder.tvPlayerName.setText(player.getNickname());
         holder.tvPlayerScore.setText(player.getScore() + " điểm");
-//        holder.ivPlayerAvatar.setImageResource(R.drawable.avatar);
+        if (player.isDrawing()){
+            holder.ivPlayerDrawing.setVisibility(View.VISIBLE);
+        } else {
+            holder.ivPlayerDrawing.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -70,6 +76,11 @@ public class PlayerAdapter extends RecyclerView.Adapter<PlayerAdapter.PlayerView
     public void updatePlayers(List<Player> newPlayers) {
         this.players.clear();
         this.players.addAll(newPlayers);
+        notifyDataSetChanged();
+    }
+
+    public void addPlayer(Player player) {
+        this.players.add(player);
         notifyDataSetChanged();
     }
 }

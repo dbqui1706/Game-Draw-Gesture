@@ -41,14 +41,12 @@ public class FragmentWaitingRoom extends Fragment {
     private Spinner spinnerPerson, spinnerTimer, spinnerRound, spinnerHint;
     private final Map<Class<? extends BaseSpinnerItem>, Consumer<BaseSpinnerItem>> optionUpdaters = new HashMap<>();
 
-    public static FragmentWaitingRoom newInstance(GameWebSocketService webSocketService, Room room, Player player) {
-        FragmentWaitingRoom fragment = new FragmentWaitingRoom();
+    public FragmentWaitingRoom (GameWebSocketService webSocketService, Room room, Player player) {
         Bundle args = new Bundle();
         args.putSerializable("room", room);
         args.putSerializable("player", player);
         args.putSerializable("webSocketService", webSocketService);
-        fragment.setArguments(args);
-        return fragment;
+        this.setArguments(args);
     }
 
     @Override
@@ -170,6 +168,4 @@ public class FragmentWaitingRoom extends Fragment {
             webSocketService.sendMessage(destination, "");
         });
     }
-
-
 }

@@ -2,6 +2,7 @@ package fit.nlu.state;
 
 import androidx.fragment.app.Fragment;
 
+import fit.nlu.enums.RoomState;
 import fit.nlu.fragment.FragmentWaitingRoom;
 import fit.nlu.main.RoomActivity;
 import fit.nlu.model.RoomSetting;
@@ -26,13 +27,7 @@ public class WaitingStateHandler extends RoomStateHandler {
 
     @Override
     public Fragment getStateFragment() {
-        if (fragment == null) {
-            fragment = FragmentWaitingRoom.newInstance(
-                    webSocket,
-                    roomActivity.getCurrentRoom(),
-                    roomActivity.getCurrentPlayer()
-            );
-        }
+        fragment = new FragmentWaitingRoom(webSocket, roomActivity.getCurrentRoom(), roomActivity.getCurrentPlayer());
         return fragment;
     }
 

@@ -26,6 +26,7 @@ public class RoomStateManager {
         stateHandlers.put(RoomState.WAITING, new WaitingStateHandler(activity, webSocket));
         stateHandlers.put(RoomState.CHOOSING, new ChoosingStateHandler(activity, webSocket));
         stateHandlers.put(RoomState.PLAYING, new PlayingStateHandler(activity, webSocket));
+        stateHandlers.put(RoomState.TURN_TIMEOUT, new TurnTimeoutStateHandler(activity, webSocket));
         stateHandlers.put(RoomState.FINISHED, new FinishedStateHandler(activity, webSocket));
     }
 
@@ -49,5 +50,4 @@ public class RoomStateManager {
             stateHandlers.get(currentState).handlePlayerAction(action, params);
         }
     }
-
 }

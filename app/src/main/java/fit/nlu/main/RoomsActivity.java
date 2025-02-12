@@ -73,7 +73,7 @@ public class RoomsActivity extends AppCompatActivity implements GameWebSocketSer
 
         // Set adapter ngay sau khi khởi tạo
         roomsRV.setAdapter(adapter);
-        adapter.setOnItemClickListener(this::onJoinRoom);
+        adapter.setOnItemClickListener(room -> onJoinRoom(room));
     }
 
     // Thêm hàm onJoinRoom
@@ -181,8 +181,12 @@ public class RoomsActivity extends AppCompatActivity implements GameWebSocketSer
     @Override
     protected void onResume() {
         super.onResume();
-        if (webSocketService != null && !webSocketService.isConnected()) {
-            webSocketService.connect();
+        if (webSocketService != null) {
+            if (!webSocketService.isConnected()) {
+                webSocketService.connect();
+            } else {
+               webSocketService.sendMessage("/app/rooms", "");
+            }
         }
     }
 }
