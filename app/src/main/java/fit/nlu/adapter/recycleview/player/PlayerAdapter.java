@@ -27,13 +27,6 @@ public class PlayerAdapter extends RecyclerView.Adapter<PlayerAdapter.PlayerView
         players = new ArrayList<>();
     }
 
-    public void resetDrawingStatus() {
-        for (Player player : players) {
-            player.setDrawing(false);
-        }
-        notifyDataSetChanged();
-    }
-
     // ViewHolder class đại diện cho mỗi item trong RecyclerView
     public static class PlayerViewHolder extends RecyclerView.ViewHolder {
         ImageView ivPlayerAvatar;

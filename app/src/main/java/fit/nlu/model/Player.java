@@ -57,10 +57,17 @@ public class Player implements Serializable {
     public PlayerStatus getStatus() {
         return status;
     }
+
     public void setDrawing(boolean drawing) {
         this.drawing = drawing;
     }
+
     public void setOwner(boolean owner) {
         this.isOwner = owner;
     }
+
+    public void setScore(int score) {
+        this.score = score;
+    }
+
 }

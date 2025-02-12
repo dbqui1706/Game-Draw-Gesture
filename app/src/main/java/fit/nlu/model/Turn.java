@@ -3,6 +3,7 @@ package fit.nlu.model;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 import fit.nlu.canvas.DrawingData;
@@ -14,7 +15,7 @@ public class Turn implements Serializable {
     private String id;
     private Player drawer;
     private String keyword;
-    private List<Guess> guesses;
+    private Set<Guess> guesses;
     private TurnState state;
     private Timestamp startTime;
     private Timestamp endTime;
@@ -35,7 +36,7 @@ public class Turn implements Serializable {
         return keyword;
     }
 
-    public List<Guess> getGuesses() {
+    public Set<Guess> getGuesses() {
         return guesses;
     }
 

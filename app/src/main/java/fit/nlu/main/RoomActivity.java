@@ -16,7 +16,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +28,7 @@ import fit.nlu.canvas.DrawingData;
 import fit.nlu.enums.MessageType;
 import fit.nlu.enums.RoomState;
 import fit.nlu.main.controller.RoomUIController;
+import fit.nlu.model.Guess;
 import fit.nlu.model.Message;
 import fit.nlu.model.Player;
 import fit.nlu.model.Room;
@@ -244,7 +247,10 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
                 "/topic/room/" + roomId + "/start",
                 "/topic/room/" + roomId + "/time",
                 "/topic/room/" + roomId + "/draw",
-                "/topic/room/" + roomId + "/guess"
+                "/topic/room/" + roomId + "/guess",
+                "/topic/room/" + roomId + "/score",
+                "/topic/room/" + roomId + "/timeout",
+                "/topic/room/" + roomId + "/turn-end"
         };
         for (String topic : topics) {
             webSocketService.subscribe(topic);
@@ -292,6 +298,53 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
             onTurnChange(message);
         } else if (topic.equals("/topic/room/" + roomId + "/guess")) {
             onGuess(message);
+        } else if (topic.equals("/topic/room/" + roomId + "/score")) {
+            onScoreUpdate(message);
+        } else if (topic.equals("/topic/room/" + roomId + "/timeout")) {
+            onTurnTimeout(message);
+        } else if (topic.equals("/topic/room/" + roomId + "/turn-end")) {
+            onTurnEnd(message);
+        }
+    }
+
+    private void onTurnEnd(String message) {
+        try {
+            Turn turn = gson.fromJson(message, Turn.class);
+            if (turn == null) return;
+            currentTurn = turn;
+            currentRoom.setState(RoomState.TURN_TIMEOUT);
+            runOnUiThread(() -> {
+//                uiController.setRoom(currentRoom);
+                uiController.updateHeader(currentTurn, currentPlayer);
+            });
+            stateManager.changeState(currentRoom.getState());
+        } catch (JsonSyntaxException e) {
+            Log.e(TAG, "Error parsing turn end message", e);
+        }
+    }
+
+    private void onTurnTimeout(String message) {
+        try {
+            Message timeoutMessage = gson.fromJson(message, Message.class);
+            if (timeoutMessage != null) {
+                int time = Integer.parseInt(timeoutMessage.getContent());
+                runOnUiThread(() -> uiController.updateTimeFromServer(time));
+            }
+        } catch (JsonSyntaxException e) {
+            Log.e(TAG, "Error parsing turn timeout message", e);
+        }
+    }
+
+    private void onScoreUpdate(String message) {
+        try {
+            Type playerListType = new TypeToken<List<Player>>() {
+            }.getType();
+            List<Player> updatedPlayers = gson.fromJson(message, playerListType);
+            players = updatedPlayers;
+            Log.d(TAG, "onScoreUpdate: " + updatedPlayers);
+            uiController.updatePlayerList(players);
+        } catch (JsonSyntaxException e) {
+            Log.e(TAG, "Error parsing score update", e);
         }
     }
 
@@ -342,7 +395,6 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
         } catch (JsonSyntaxException e) {
             Log.e(TAG, "Error parsing turn change", e);
         }
-
     }
 
     private void onPlayerLeave(String message) {
@@ -439,6 +491,7 @@ public class RoomActivity extends AppCompatActivity implements GameWebSocketServ
                 if (players.size() < 2) {
                     Log.d(TAG, "Room only has 1 player left");
                     currentRoom.setState(RoomState.WAITING);
+                    currentTurn = null;
                     stateManager.changeState(currentRoom.getState());
                 }
             }

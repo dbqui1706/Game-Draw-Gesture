@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import fit.nlu.utils.Config;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
@@ -22,7 +23,6 @@ import ua.naiksoftware.stomp.dto.LifecycleEvent;
  */
 public class GameWebSocketService implements Serializable {
     private static final String TAG = "WebSocketManager";
-    private static final String WS_URL = "ws://192.168.31.210:8081/ws/websocket";
 
     // Lưu trữ các disposables để quản lý subscriptions
     private final CompositeDisposable compositeDisposable;
@@ -41,7 +41,7 @@ public class GameWebSocketService implements Serializable {
     public GameWebSocketService(WebSocketEventListener listener) {
         this.eventListener = listener;
         // Khởi tạo STOMP client với URL của server
-        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, WS_URL);
+        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, Config.WS_URL);
         // Cấu hình heartbeat để duy trì kết nối
         stompClient.withClientHeartbeat(30000)
                 .withServerHeartbeat(30000);

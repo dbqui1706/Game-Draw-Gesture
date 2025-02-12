@@ -184,7 +184,17 @@ public class RoomUIController {
             } else {
                 tvWord.setText("Đoán từ: " + Util.maskWord(turn.getKeyword()));
             }
-        } else if (room.getState() == RoomState.WAITING || room.getState() == RoomState.GAME_END) {
+        } else if (room.getState() == RoomState.TURN_TIMEOUT) {
+            if (countdownManager == null) {
+                countdownManager = new CountdownManager(tvTimer);
+            }
+
+            tvWaiting.setVisibility(TextView.GONE);
+            tvWord.setVisibility(TextView.VISIBLE);
+            tvWord.setText("Từ: " + turn.getKeyword());
+        }
+
+        else if (room.getState() == RoomState.WAITING || room.getState() == RoomState.GAME_END) {
             if (countdownManager != null) {
                 countdownManager.cleanup();
             }

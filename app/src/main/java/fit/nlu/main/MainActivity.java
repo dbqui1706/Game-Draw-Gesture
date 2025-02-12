@@ -17,6 +17,7 @@ import fit.nlu.model.Room;
 import fit.nlu.service.ApiClient;
 import fit.nlu.service.GameApiService;
 import fit.nlu.service.GameWebSocketService;
+import fit.nlu.utils.Util;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -67,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements GameWebSocketServ
      */
     private void initializeViews() {
         edtNickname = findViewById(R.id.edtNickname);
+        edtNickname.setText(Util.generateUniqueUsername());
         avatarImageView = findViewById(R.id.avatar_player);
         btnRooms = findViewById(R.id.btnRoom);
         btnCreateRoom = findViewById(R.id.btnNewRoom);

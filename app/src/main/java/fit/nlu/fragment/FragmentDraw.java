@@ -13,12 +13,10 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 
 import fit.nlu.canvas.DrawingData;
 import fit.nlu.canvas.DrawingView;
 import fit.nlu.main.R;
-import fit.nlu.main.RoomActivity;
 import fit.nlu.model.Player;
 import fit.nlu.model.Room;
 import fit.nlu.model.Turn;
@@ -40,8 +38,6 @@ public class FragmentDraw extends Fragment {
         Log.d("FragmentDraw", "webSocketService: " + webSocketService);
         Log.d("FragmentDraw", "currentRoom: " + room);
         Log.d("FragmentDraw", "currentPlayer: " + player);
-//        Log.d("FragmentDraw", "Drawer: " + turn.getDrawer());
-
 
         this.webSocketService = webSocketService;
         this.currentRoom = room;
@@ -62,7 +58,6 @@ public class FragmentDraw extends Fragment {
         btnPen = view.findViewById(R.id.btnPen);
 
         // Set visibility cho các nút dựa vào quyền của người chơi và ngăn chặn việc vẽ khi không phải lượt của mình
-
         if (currentTurn != null) {
             Player drawer = currentTurn.getDrawer();
             if (drawer.getId().equals(currentPlayer.getId())) {
